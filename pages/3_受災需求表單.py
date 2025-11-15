@@ -21,7 +21,8 @@ creds = Credentials.from_service_account_info(
 client = gspread.authorize(creds)
 
 # 打開 Google Sheet（名稱需完全一致）
-sheet = client.open("你的 Google Sheet 名稱").sheet1
+sheet_id = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"  # 從網址取得
+sheet = gc.open_by_key(sheet_id).sheet1
 
 # 建立表單
 name = st.text_input("姓名")
