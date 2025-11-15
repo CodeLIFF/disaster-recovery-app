@@ -11,7 +11,7 @@ creds = Credentials.from_service_account_info(st.secrets["google"])
 gc = gspread.authorize(creds)
 
 # 打開你的 Google Sheet，假設名稱為 "志工受災戶表單"
-sheet = gc.open("vol").sheet1
+sheet = gc.open("disaster-受災戶需求").sheet1
 
 # ---------- Streamlit 表單 ----------
 st.title("志工與受災戶登記表單")
