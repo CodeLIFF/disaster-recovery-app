@@ -5,7 +5,14 @@ from google.oauth2.service_account import Credentials
 
 # ---------- Google Sheet 連線 ----------
 # 從 Streamlit Secrets 讀取 Service Account 資訊
-creds = Credentials.from_service_account_info(st.secrets["google"])
+from google.oauth2.service_account import Credentials
+creds = Credentials.from_service_account_info(
+    st.secrets["google"],
+    scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+)
 
 # 授權
 gc = gspread.authorize(creds)
