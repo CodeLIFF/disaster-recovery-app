@@ -1,0 +1,86 @@
+import streamlit as st
+import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
+
+# ---------------- Google Sheet 連線 ----------------
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+creds = Credentials.from_service_account_info(
+    st.secrets["google"],
+    scopes=SCOPES
+)
+
+gc = gspread.authorize(creds)
+
+# Google Sheet ID
+SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
+sheet = gc.open_by_key(SHEET_ID).sheet1
+
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
+
+# ---------------- Streamlit UI ----------------
+st.set_page_config(page_title="災後媒合平台", layout="wide")
+st.title("災後人力媒合平台（志工 x 受災戶）")
+st.write(f"目前共有 {len(df)} 筆需求")
+
+# ---------------- 篩選區 ----------------
+col1, col2, col3 = st.columns(3)
+
+keyword = col1.text_input("搜尋地址或備註")
+skill_filter = col2.selectbox("能力需求", ["全部"] + sorted(df["skills"].unique()))
+need_filter = col3.selectbox("名額狀態", ["全部", "未滿", "已滿"])
+
+filtered = df.copy()
+
+# 文字搜尋
+if keyword:
+    filtered = filtered[
+        filtered["address"].str.contains(keyword, case=False) |
+        filtered["note"].str.contains(keyword, case=False)
+    ]
+
+# 能力需求
+if skill_filter != "全部":
+    filtered = filtered[filtered["skills"] == skill_filter]
+
+# 是否已滿
+if need_filter == "未滿":
+    filtered = filtered[filtered["selected_people"] < filtered["need_people"]]
+elif need_filter == "已滿":
+    filtered = filtered[filtered["selected_people"] >= filtered["need_people"]]
+
+st.markdown("---")
+
+# ---------------- 資料卡片列表 ----------------
+
+for idx, row in filtered.iterrows():
+
+    left, right = st.columns([2, 1])
+
+    # 左邊：文字資訊
+    with left:
+        st.markdown(f"## 📍 {row['address']}")
+        st.markdown(f"**🕒 工作時間：** {row['work_time']}")
+        st.markdown(f"**👥 需求人數：** {row['selected_people']} / {row['need_people']}")
+        st.markdown(f"**🧰 提供資源：** {row['resources']}")
+        st.markdown(f"**💪 能力需求：** {row['skills']}")
+        st.markdown(f"**🚗 建議交通方式：** {row['transport']}")
+        st.markdown(f"**📝 備註：** {row['note']}")
+
+        # 報名按鈕
+        st.link_button("我要報名", f"https://forms.gle/xxxxxxx")
+
+    # 右邊：實景照片
+    with right:
+        if row["photo_url"]:
+            st.image(row["photo_url"], use_column_width=True)
+        else:
+            st.write("(無照片)")
+
+    st.markdown("---")
+
