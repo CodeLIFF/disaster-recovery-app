@@ -19,7 +19,7 @@ gc = gspread.authorize(creds)
 
 # 打開你的 Google Sheet，假設名稱為 "志工受災戶表單"
 sheet_id = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"  # 從網址取得
-sheet = gc.open_by_key(sheet_id).get_worksheet_by_id(1834819165)
+sheet = gc.open_by_key(sheet_id).sheet1
 
 
 # ---------- Streamlit 表單 ----------
