@@ -15,7 +15,7 @@ creds = Credentials.from_service_account_info(
 gc = gspread.authorize(creds)
 
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
-ws = gc.open_by_key(SHEET_ID).worksheet("vol")
+ws = gc.open_by_key(SHEET_ID).worksheet("vol")  # 工作表名稱：vol
 
 # 可變動的災區關鍵字（之後你們只要改這一行即可）
 ALLOWED_REGION = "花蓮縣"
@@ -40,16 +40,16 @@ def load_df():
 def normalize_text(text):
     if pd.isna(text):
         return ""
-    return str(text).replace("　", " ").strip()  # 全形空白 → 半形空白 → 去頭尾空格
+    return str(text).replace("　", " ").strip()  # 全形空白 → 半形空白 → 去頭尾空白
 
 
 # 電話專用清洗：只保留數字，並拿掉開頭的 0
 def normalize_phone(text):
     if pd.isna(text):
         return ""
-    # 只留數字，去掉空白、dash、括號等等
+    # 只留數字（把 dash、空白、括號等全部砍掉）
     digits = re.sub(r"\D", "", str(text))
-    # 把開頭的 0 拿掉，避免 0922 和 922 比對不到
+    # 去掉開頭的 0，避免 0928 和 928 被當成不同
     return digits.lstrip("0")
 
 
@@ -58,14 +58,29 @@ def find_victim_row(name, phone):
     if df.empty:
         return None, None
 
-    # 把 Google Sheet 裡的資料先清洗
+    # 清洗 Google Sheet 裡的 role / name / phone
     df["role"] = df["role"].apply(normalize_text)
     df["name"] = df["name"].apply(normalize_text)
-    # 多建立一欄「phone_norm」來做比對
     df["phone_norm"] = df["phone"].apply(normalize_phone)
 
-    # 把使用者
+    # 清洗使用者輸入
+    name_norm = normalize_text(name)
+    phone_norm = normalize_phone(phone)
 
+    # 只抓 role=victim 且 name / phone 都符合的那一列
+    mask = (
+        (df["role"] == "victim")
+        & (df["name"] == name_norm)
+        & (df["phone_norm"] == phone_norm)
+    )
+
+    if not mask.any():
+        # 找不到就回傳 (None, None) 給呼叫端檢查
+        return None, None
+
+    idx = df.index[mask][0]
+    row_number = idx + 2  # DataFrame index 0 對應 Google Sheet 第 2 列
+    return row_number, df.loc[idx]
 
 
 # ---------- 驗證 address 是否在指定縣市，且不含英文字母 ----------
@@ -381,4 +396,3 @@ if st.button("✅ 送出受災需求"):
     except Exception as e:
         st.error("❌ 更新 Google Sheet 失敗，請稍後再試。")
         st.error(str(e))
-
