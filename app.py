@@ -35,11 +35,11 @@ csv_file = "local_backup.csv"  # 本地備份用，可選
 if st.button("送出"):
     if name and phone:  # 必填驗證
         # 1️⃣ 新增資料
-        new_data = pd.DataFrame([[role, name, phone, line_id, extra]],
+        new_data = pd.DataFrame([[role, name, phone, line_id]],
                                 columns=["身份", "姓名", "電話", "Line ID"])
         
         # 2️⃣ 寫入 Google Sheet
-        sheet.append_row([role, name, phone, line_id, extra])
+        sheet.append_row([role, name, phone, line_id])
         
         # 3️⃣ 本地備份 CSV（可選）
         import os
