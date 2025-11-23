@@ -25,8 +25,8 @@ sheet_id = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"  # 從網址取得
 sheet = client.open_by_key(sheet_id).sheet1  # ← 修正這裡
 
 # 建立表單
-name = st.text_input("姓名")
-age = st.number_input("年齡", min_value=0)
+name = st.text_input("請輸入您的姓名（與註冊基本資料表單時相同）")
+phone = st.text_input("請輸入您的電話（與註冊基本資料表單時相同）")
 
 if st.button("送出"):
     sheet.append_row([name, age])
