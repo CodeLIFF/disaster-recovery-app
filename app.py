@@ -28,7 +28,6 @@ role = st.selectbox("身份", ["志工", "受災戶"])
 name = st.text_input("姓名")
 phone = st.text_input("電話")
 line_id = st.text_input("Line ID (選填)")
-extra = st.text_area("受災戶需求 / 可提供資源 (選填)")
 
 csv_file = "local_backup.csv"  # 本地備份用，可選
 
@@ -36,7 +35,7 @@ if st.button("送出"):
     if name and phone:  # 必填驗證
         # 1️⃣ 新增資料
         new_data = pd.DataFrame([[role, name, phone, line_id, extra]],
-                                columns=["身份", "姓名", "電話", "Line ID", "需求/資源"])
+                                columns=["身份", "姓名", "電話", "Line ID"])
         
         # 2️⃣ 寫入 Google Sheet
         sheet.append_row([role, name, phone, line_id, extra])
