@@ -28,8 +28,15 @@ sheet = client.open_by_key(sheet_id).sheet1  # ← 修正這裡
 name = st.text_input("請輸入您的姓名（與註冊基本資料表單時相同）")
 phone = st.text_input("請輸入您的電話（與註冊基本資料表單時相同）")
 
+if st.button("確認身分"):
+    # 檢查姓名與電話是否存在
+    matched_user = users[(users["姓名"] == name) & (users["電話"] == phone)]
+    if len(matched_user) == 0:
+        st.error("查無此使用者，請先到基本資料表單註冊。")
+    else:
+        st.success("身分驗證成功，請填寫您的需求。")
 if st.button("送出"):
-    sheet.append_row([name, age])
+    sheet.append_row([name, ])
     st.success("成功寫入 Google Sheets！")
 
 # 讀取資料並顯示
