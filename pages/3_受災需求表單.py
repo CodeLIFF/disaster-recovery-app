@@ -3,7 +3,7 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-st.title("Streamlit Cloud × Google Sheets")
+st.title("受災需求表單")
 
 # 設定 Google Sheets 權限
 SCOPE = [
@@ -35,9 +35,6 @@ if st.button("確認身分"):
         st.error("查無此使用者，請先到基本資料表單註冊。")
     else:
         st.success("身分驗證成功，請填寫您的需求。")
-if st.button("送出"):
-    sheet.append_row([name, ])
-    st.success("成功寫入 Google Sheets！")
 
 # 讀取資料並顯示
 data = sheet.get_all_records()
