@@ -42,15 +42,17 @@ def is_duplicate(role, name, phone):
 # ---------- Streamlit 表單本體 ----------
 st.title("基本資料表單（志工 / 受災戶）")
 
-role_display = st.selectbox("身分（role）", ["志工 volunteer", "受災戶 victim"])
+role_display = st.selectbox("身分 role", ["志工 volunteer", "受災戶 victim"])
 role = "volunteer" if "志工" in role_display else "victim"
 
-name = st.text_input("姓名（name）")
-phone = st.text_input("電話（phone）")
-line_id = st.text_input("Line ID（line_id，可選填）")
+name = st.text_input("姓名 name")
+phone = st.text_input("電話 phone number")
+line_id = st.text_input("Line ID")
 
-st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
-
+if role = "volunteer":
+    st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
+else:
+    st.caption("＊請先填這一張，受災需求細節會在媒合介面呈現。")
 if st.button("送出基本資料"):
     if not name or not phone:
         st.error("❌ 姓名與電話為必填欄位")
@@ -82,9 +84,12 @@ if st.button("送出基本資料"):
 
             try:
                 ws.append_row(row)
-                st.success(f"✅ 已成功送出基本資料！您的 id_number 是：{id_number}")
-                st.info("若您是受災戶，請接著前往「受災需求表單」頁面填寫詳細需求。")
+                st.success(f"✅ 已成功送出基本資料！")
+                if role = "volunteer":
+                    st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
+                else:
+                    st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
             except Exception as e:
-                st.error("❌ 寫入 Google Sheet 失敗，請稍後再試。")
+                st.error("❌ 填寫失敗，請稍後再試。")
                 st.error(str(e))
 
