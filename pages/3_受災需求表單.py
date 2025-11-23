@@ -30,46 +30,42 @@ if "address_verified" not in st.session_state:
     st.session_state["address_value"] = ""
 
 
-# ---------- 小工具：讀取資料 ----------
+# ---------- 小工具：讀取資料 + 找受災戶那一列 ----------
 def load_df():
     data = ws.get_all_records()
     return pd.DataFrame(data) if data else pd.DataFrame()
 
 
-# 把全形空白、奇怪空格都處理掉
-def normalize(text):
+# 一般文字用的清洗：處理全形空白、前後空格
+def normalize_text(text):
     if pd.isna(text):
         return ""
-    # 把全形空白（U+3000）換成一般空白，再 strip
-    return str(text).replace("　", " ").strip()
+    return str(text).replace("　", " ").strip()  # 全形空白 → 半形空白 → 去頭尾空格
 
 
-# 專門用來找「受災戶」那一列
+# 電話專用清洗：只保留數字，並拿掉開頭的 0
+def normalize_phone(text):
+    if pd.isna(text):
+        return ""
+    # 只留數字，去掉空白、dash、括號等等
+    digits = re.sub(r"\D", "", str(text))
+    # 把開頭的 0 拿掉，避免 0922 和 922 比對不到
+    return digits.lstrip("0")
+
+
 def find_victim_row(name, phone):
     df = load_df()
     if df.empty:
         return None, None
 
-    # 先把 Google Sheet 裡三個欄位全部清洗過
-    df["role"] = df["role"].apply(normalize)
-    df["name"] = df["name"].apply(normalize)
-    df["phone"] = df["phone"].apply(normalize)
+    # 把 Google Sheet 裡的資料先清洗
+    df["role"] = df["role"].apply(normalize_text)
+    df["name"] = df["name"].apply(normalize_text)
+    # 多建立一欄「phone_norm」來做比對
+    df["phone_norm"] = df["phone"].apply(normalize_phone)
 
-    name_norm = normalize(name)
-    phone_norm = normalize(phone)
+    # 把使用者
 
-    mask = (
-        (df["role"] == "victim")
-        & (df["name"] == name_norm)
-        & (df["phone"] == phone_norm)
-    )
-
-    if not mask.any():
-        return None, df
-
-    idx = df.index[mask][0]
-    row_number = idx + 2  # DataFrame index 0 -> Google Sheet 第 2 列
-    return row_number, df.loc[idx]
 
 
 # ---------- 驗證 address 是否在指定縣市，且不含英文字母 ----------
