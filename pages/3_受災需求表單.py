@@ -41,7 +41,20 @@ def find_victim_row(name, phone):
     if df.empty:
         return None, None
 
-    mask = (df["role"] == "victim") & (df["name"] == name) & (df["phone"] == phone)
+    # 統一轉成字串並去掉前後空白
+    df["role"] = df["role"].astype(str).str.strip()
+    df["name"] = df["name"].astype(str).str.strip()
+    df["phone"] = df["phone"].astype(str).str.strip()
+
+    name_norm = str(name).strip()
+    phone_norm = str(phone).strip()
+
+    mask = (
+        (df["role"] == "victim")
+        & (df["name"] == name_norm)
+        & (df["phone"] == phone_norm)
+    )
+
     if not mask.any():
         return None, df
 
