@@ -49,7 +49,7 @@ name = st.text_input("姓名 name")
 phone = st.text_input("電話 phone number")
 line_id = st.text_input("Line ID")
 
-if role = "volunteer":
+if role == "volunteer":
     st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
 else:
     st.caption("＊請先填這一張，受災需求細節會在媒合介面呈現。")
@@ -85,7 +85,7 @@ if st.button("送出基本資料"):
             try:
                 ws.append_row(row)
                 st.success(f"✅ 已成功送出基本資料！")
-                if role = "volunteer":
+                if role == "volunteer":
                     st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
                 else:
                     st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
