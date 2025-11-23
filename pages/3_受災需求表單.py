@@ -30,24 +30,33 @@ if "address_verified" not in st.session_state:
     st.session_state["address_value"] = ""
 
 
-# ---------- 小工具：讀取資料 + 找受災戶那一列 ----------
+# ---------- 小工具：讀取資料 ----------
 def load_df():
     data = ws.get_all_records()
     return pd.DataFrame(data) if data else pd.DataFrame()
 
 
+# 把全形空白、奇怪空格都處理掉
+def normalize(text):
+    if pd.isna(text):
+        return ""
+    # 把全形空白（U+3000）換成一般空白，再 strip
+    return str(text).replace("　", " ").strip()
+
+
+# 專門用來找「受災戶」那一列
 def find_victim_row(name, phone):
     df = load_df()
     if df.empty:
         return None, None
 
-    # 統一轉成字串並去掉前後空白
-    df["role"] = df["role"].astype(str).str.strip()
-    df["name"] = df["name"].astype(str).str.strip()
-    df["phone"] = df["phone"].astype(str).str.strip()
+    # 先把 Google Sheet 裡三個欄位全部清洗過
+    df["role"] = df["role"].apply(normalize)
+    df["name"] = df["name"].apply(normalize)
+    df["phone"] = df["phone"].apply(normalize)
 
-    name_norm = str(name).strip()
-    phone_norm = str(phone).strip()
+    name_norm = normalize(name)
+    phone_norm = normalize(phone)
 
     mask = (
         (df["role"] == "victim")
@@ -188,7 +197,6 @@ res_other_text = ""
 if res_other:
     res_other_text = st.text_input("請說明其他資源", key="res_other_text")
 
-
 # 能力需求 skills：多選 + 其他
 st.markdown("#### 💪 希望志工具備的能力（skills，必填，可複選）")
 sk_supplies = st.checkbox("📦 物資發放 supplies distribution")
@@ -201,7 +209,6 @@ sk_other = st.checkbox("✨ 其他 other skills")
 sk_other_text = ""
 if sk_other:
     sk_other_text = st.text_input("請說明其他能力需求", key="sk_other_text")
-
 
 # 地點照片
 photo = st.text_input(
