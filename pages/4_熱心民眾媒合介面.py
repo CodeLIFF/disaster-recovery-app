@@ -152,7 +152,7 @@ for idx, row in filtered.iterrows():
     with left:
         st.markdown(f"## 📍 {row['mission_name']} — {row['address']}")
         st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}")
-        st.markdown(f"**👥 需求人數：** {translate_list(row['selected_worker'])} / {translate_list(row['demand_worker'])}")
+        st.markdown(f"**👥 需求人數：** {row['selected_worker']} / {row['demand_worker']}")
         st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}")
         st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}")
         st.markdown(f"**🚗 交通建議：** {translate_list(row['transport'])}")
