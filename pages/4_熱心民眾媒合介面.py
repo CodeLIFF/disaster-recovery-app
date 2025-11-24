@@ -32,6 +32,21 @@ text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
 for col in text_fields:
     if col in df.columns:
         df[col] = df[col].fillna("").astype(str)
+translate = {
+    "morning": "早上",
+    "noon": "中午",
+    "afternoon": "下午",
+    "night": "晚上",
+    "tool": "工具",
+    "food": "食物",
+    "water": "飲用水",
+    "hygiene supplies": "清潔用品",
+    "cleaning": "清潔",
+    "heavy lifting": "粗重物品搬運",
+    "train": "火車",
+    "walk": "步行",
+    "scooter": "機車",
+}
 
 # 清欄位空白
 df.columns = df.columns.str.strip()
