@@ -123,6 +123,9 @@ st.markdown("---")
 if "accepted_task" not in st.session_state:
     st.session_state.accepted_task = None
 
+# 取得目前志工身份驗證資訊（提前）
+vol_id = st.session_state.get("current_volunteer_id")
+
 st.markdown("""
 <style>
 .label {
