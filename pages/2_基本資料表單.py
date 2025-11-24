@@ -88,18 +88,20 @@ if st.button("送出基本資料 submit"):
                 "",         # O: note
             ]
 
-            try:
-                ws.append_row(row)
-                st.session_state["current_volunteer_id"] = id_number
-                st.session_state["current_volunteer_name"] = name
-                st.session_state["current_volunteer_phone"] = phone
-                st.session_state["current_volunteer_line"] = line_id
+            ws.append_row(row)
 
-                st.success(f"✅ 已成功送出基本資料！")
-                if role == "victim":
-                    st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
-                else:
-                    st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
+            # 🔐 設定 session 狀態
+            st.session_state["current_volunteer_id"] = id_number
+            st.session_state["current_volunteer_name"] = name
+            st.session_state["current_volunteer_phone"] = phone
+            st.session_state["current_volunteer_line"] = line_id
+            
+            st.success("✅ 已成功送出基本資料！")
+            if role == "victim":
+                st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
+            else:
+                st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
+
             except Exception as e:
                 st.error("❌ 填寫失敗，請稍後再試。")
                 st.error(str(e))
