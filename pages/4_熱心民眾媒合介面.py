@@ -186,26 +186,26 @@ if st.session_state.accepted_task is not None:
 
     df.loc[df["id_number"] == task_id, "accepted_volunteers"] = new_value
 
-    # 回寫 Google Sheet
-    update_sheet(df)
-
-    # 回寫 Google Sheet
+    # 回寫 Google Sheet（一次就好）
     update_sheet(df)
     
     # 🔄 重新抓取最新資料
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
+    
+    # 數值欄位型別修復
     df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
     df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
-
+    
     st.success("🎉 你已成功接取此任務！")
-
+    
+    # 顯示確認資訊
     st.write(f"📌 任務名稱：{target_row['mission_name']}")
     st.write(f"📍 地址：{target_row['address']}")
     st.write(f"☎️ 電話：{target_row['phone']}")
     st.write(f"LINE：{target_row['line_id']}")
     st.write(f"👤 你已登記為此任務志工：{vol_name}")
-
+    
     # 🔄 重置 Session 防止重複報名
     st.session_state.accepted_task = None
     st.rerun()
