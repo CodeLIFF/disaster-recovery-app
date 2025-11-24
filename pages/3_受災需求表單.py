@@ -247,6 +247,15 @@ demand_worker = st.number_input(
     label_visibility="collapsed",  # 🔑 不顯示內建 label，只留下上面的 #### 標題
 )
 
+# 地點照片：仍為必填，但預設帶入上一張連結（鼓勵可以換成今日照片）
+st.markdown("#### 📸 地點當前照片連結 photo（必填）")
+photo = st.text_input(
+    "地點當前照片連結 photo",   # 真正的 label（但等一下會被藏起來）
+    value=prev_photo,            # 如果有前一天的資料，就預設帶入；沒有這個變數就刪掉這行
+    placeholder="建議先將照片上傳至 Google Drive 雲端硬碟，設定共用後再貼上分享網址（建議每日更新）",
+    label_visibility="collapsed",  # 🔑 收起 label，連那行空白一起消失
+)
+
 st.markdown("---")
 
 # 提供資源 resources：多選 + 其他（預設上一筆）
@@ -278,15 +287,6 @@ sk_other_text = st.text_input(
     "請說明其他能力需求",
     key="sk_other_text",
     value=sk_other_text_default if sk_other else "",
-)
-
-# 地點照片：仍為必填，但預設帶入上一張連結（鼓勵可以換成今日照片）
-st.markdown("#### 📸 地點當前照片連結 photo（必填）")
-photo = st.text_input(
-    "地點當前照片連結 photo",   # 真正的 label（但等一下會被藏起來）
-    value=prev_photo,            # 如果有前一天的資料，就預設帶入；沒有這個變數就刪掉這行
-    placeholder="建議先將照片上傳至 Google Drive 雲端硬碟，設定共用後再貼上分享網址（建議每日更新）",
-    label_visibility="collapsed",  # 🔑 收起 label，連那行空白一起消失
 )
 
 # 建議交通方式 transport：多選 + 其他（預設上一筆）
