@@ -32,16 +32,29 @@ df.columns = df.columns.str.strip()
 df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
 df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
 df["id"] = pd.to_numeric(df["id"], errors="coerce").astype(int)
+#--------------讓未填受災戶需求表單的資料不要呈現------------------
+# 1. 讀取 Google Sheet
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
 
+# 2. 清欄位（建議）
+df.columns = df.columns.str.strip()
+
+# 3. ★★★ 只顯示有填詳細資訊的受災戶（請放在這裡） ★★★
 required_cols = ["mission_name", "address", "work_time", "demand_worker"]
 
-df = df.dropna(subset=required_cols)  # 去掉 NA
+df = df.dropna(subset=required_cols)
+
 df = df[
     (df["mission_name"] != "") &
     (df["address"] != "") &
     (df["work_time"] != "") &
     (df["demand_worker"] != "")
 ]
+
+# 4. 進入 UI 篩選 + 顯示卡片
+keyword = st.text_input("搜尋關鍵字")
+
 
 # ---------------- 更新 Google Sheet 函式 ----------------新加
 def update_sheet(updated_df):
