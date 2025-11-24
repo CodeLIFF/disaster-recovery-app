@@ -138,11 +138,15 @@ for idx, row in filtered.iterrows():
         st.markdown(f"**🚗 交通建議：** {translate_list(row['transport'])}")
         st.markdown(f"**📝 備註：** {row['note']}")
 
+        accepted = str(row.get("accepted_volunteers", "")).split("|")
+        already_joined = any(vol_id in item for item in accepted if vol_id)
+        
         # 人數已滿
         if row["selected_worker"] >= row["demand_worker"]:
-            st.error("❌ 此任務人數已足夠，無法再報名")
+            st.error("❌ 此任務人數已足夠")
+        elif already_joined:
+            st.success("✔ 你已報名此任務")
         else:
-            # 用 id_number 當 key
             if st.button("我要報名", key=f"apply_{row['id_number']}"):
                 st.session_state.accepted_task = row["id_number"]
                 st.rerun()
