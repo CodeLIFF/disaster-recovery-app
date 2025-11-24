@@ -296,13 +296,17 @@ demand_worker = st.number_input(
     label_visibility="collapsed",  # 🔑 不顯示內建 label，只留下上面的 #### 標題
 )
 
-# 地點照片：仍為必填，但預設帶入上一張連結（鼓勵可以換成今日照片）
-st.markdown("#### 📸 地點當前照片連結 photo（必填）")
-photo = st.text_input(
-    "地點當前照片連結 photo",   # 真正的 label（但等一下會被藏起來）
-    value=prev_photo,            # 如果有前一天的資料，就預設帶入；沒有這個變數就刪掉這行
-    placeholder="建議先將照片上傳至 Google Drive 雲端硬碟，設定共用後再貼上分享網址（建議每日更新）",
-    label_visibility="collapsed",  # 🔑 收起 label，連那行空白一起消失
+# ====== 地點照片：顯示舊照片 + 上傳新照片 ======
+st.markdown("#### 📸 地點當前照片 photo（必填）")
+
+if prev_photo:
+    st.caption("目前記錄中的照片：")
+    st.image(prev_photo, width=300)
+    st.caption("若現況與照片差異不大，可以不用重新上傳；若有明顯變化，請重新上傳新的照片。")
+
+uploaded_photo = st.file_uploader(
+    "請上傳目前現場照片（支援 .jpg / .jpeg / .png）",
+    type=["jpg", "jpeg", "png"],
 )
 
 st.markdown("---")
@@ -438,9 +442,20 @@ if st.button("✅ 送出今日受災需求 submit"):
         st.error("❌ 請至少勾選一項『希望志工具備的能力』。Choose at least one desired skill.")
         st.stop()
 
-    if not photo.strip():
-        st.error("❌ 地點照片連結為必填，請貼上分享網址。Photo is required.")
+    # --- 處理照片：若有新上傳就用新照片，否則沿用舊的 ---
+    if uploaded_photo is None and not prev_photo:
+        st.error("❌ 請至少上傳一張地點照片。")
         st.stop()
+    elif uploaded_photo is not None:
+        # 使用者有上傳新的照片 → 上傳到 Google Drive，取得網址
+        photo_to_save = upload_photo_to_drive(uploaded_photo)
+        if not photo_to_save:
+            st.error("❌ 照片上傳失敗，請稍後再試。")
+            st.stop()
+    else:
+        # 沒有上傳新照片，但原本就有舊照片 → 繼續沿用
+        photo_to_save = prev_photo
+
 
     transport_list = build_transport_string()
     if not transport_list:
@@ -468,7 +483,7 @@ if st.button("✅ 送出今日受災需求 submit"):
     # selected_worker 交給媒合系統管理
     update_field("resources", resources_str)
     update_field("skills", skills_str)
-    update_field("photo", photo.strip())
+    update_field("photo", photo_to_save)
     update_field("transport", transport_str)
     update_field("note", note.strip() if note else "")
 
