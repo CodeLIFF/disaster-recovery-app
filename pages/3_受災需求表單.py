@@ -91,16 +91,16 @@ def validate_address(address: str, allowed_region: str):
     return None
 
 # ---------- 受災需求表單 ----------
-st.title("🆘 受災戶需求表單（victim）")
+st.title("受災戶需求表單")
 st.write("請依步驟完成：先驗證身分 → 再驗證地址 → 通過後填寫／更新詳細需求。")
 
 # ================== 第一步：驗證基本資料 ================== #
-st.subheader("① 🧍‍♀️ 身分驗證")
+st.subheader("① 🧍‍♀️ 身分驗證 identity verification")
 
-name = st.text_input("👤 姓名（需與「基本資料表單」一致）", key="victim_name")
-phone = st.text_input("📞 電話（需與「基本資料表單」一致）", key="victim_phone")
+name = st.text_input("👤 姓名 name（需與「基本資料表單」一致）", key="victim_name")
+phone = st.text_input("📞 電話 phone number（需與「基本資料表單」一致）", key="victim_phone")
 
-if st.button("🔍 驗證基本資料"):
+if st.button("🔍 驗證基本資料 verify"):
     if not name or not phone:
         st.error("❌ 姓名與電話為必填，且需與「基本資料表單」一致")
         st.session_state["victim_verified"] = False
@@ -109,13 +109,13 @@ if st.button("🔍 驗證基本資料"):
     else:
         row_number, row_series = find_victim_row(name, phone)
         if row_number is None:
-            st.error("❌ 找不到您的基本資料（role = victim）。")
+            st.error("❌ 找不到您的基本資料。")
             st.info("請先在「基本資料表單」選擇『受災戶 victim』並填寫，或確認姓名、電話是否輸入正確。")
             st.session_state["victim_verified"] = False
             st.session_state["victim_row_number"] = None
             st.session_state["victim_prev_data"] = {}
         else:
-            st.success(f"✅ 已成功確認您的基本資料！(id_number = {row_series.get('id_number', 'N/A')})")
+            st.success(f"✅ 已成功確認您的基本資料！")
             st.session_state["victim_verified"] = True
             st.session_state["victim_row_number"] = row_number
             st.session_state["victim_prev_data"] = row_series.to_dict()
@@ -132,7 +132,7 @@ if not st.session_state["victim_verified"]:
 st.markdown("---")
 
 # ================== 第二步：地址驗證 ================== #
-st.subheader("② 📍 地址驗證")
+st.subheader("② 📍 地址驗證 address verification")
 
 address_input = st.text_input(
     "🏠 通訊 / 受災地址（address，必填）",
@@ -141,7 +141,7 @@ address_input = st.text_input(
     help=f"目前僅限災區：{ALLOWED_REGION}，地址需包含此縣市名稱。",
 )
 
-if st.button("📍 驗證地址"):
+if st.button("📍 驗證地址 verify"):
     err = validate_address(address_input, ALLOWED_REGION)
     if err:
         st.error(err)
@@ -207,20 +207,20 @@ prev_note = str(prev.get("note", "") or "")
 st.subheader("③ 📋 填寫／更新今日的受災需求")
 
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
+st.markdown("#### 📝 任務名稱 task name（可留白）")
 mission_name = st.text_input(
-    "📝 任務名稱（mission_name，可留白）",
     value=prev_mission,
     placeholder="可填大致地點與主要需求，例如：花蓮縣某某里住家清理",
     help="若留白，系統會自動以地址當作任務名稱。",
 )
 
 # 工作時間：多選（預設為上一筆設定）
-st.markdown("#### ⏰ 需要協助的時間（work_time，必填，可複選）")
+st.markdown("#### ⏰ 需要協助的時間 available time（必填，可複選）")
 time_options = {
-    "🌅 早上 morning (08:00–11:00)": "morning",
-    "🌞 中午 noon (11:00–13:00)": "noon",
-    "🌇 下午 afternoon (13:00–17:00)": "afternoon",
-    "🌃 晚上 night (17:00–19:00)": "night",
+    "🌅 早上 (08:00–11:00)": "morning",
+    "🌞 中午 (11:00–13:00)": "noon",
+    "🌇 下午 (13:00–17:00)": "afternoon",
+    "🌃 晚上 (17:00–19:00)": "night",
 }
 default_time_labels = [
     label for label, code in time_options.items() if code in prev_work_codes
@@ -234,7 +234,7 @@ selected_time_codes = [time_options[label] for label in selected_time_labels]
 
 # 人力需求：預設上一筆的需求人數
 demand_worker = st.number_input(
-    "👥 總人數需求（demand_worker，必填，上限 20）",
+    "👥 總人數需求 required number of people（必填，上限20人）",
     min_value=1,
     max_value=20,
     step=1,
@@ -244,8 +244,8 @@ demand_worker = st.number_input(
 st.markdown("---")
 
 # 提供資源 resources：多選 + 其他（預設上一筆）
-st.markdown("#### 📦 可提供的資源（resources，必填，可複選）")
-res_tool = st.checkbox("🛠 工具 tool", value=("tool" in res_tokens_set))
+st.markdown("#### 📦 可提供的資源 available resources（必填，可複選）")
+res_tool = st.checkbox("🛠 工具 tools", value=("tool" in res_tokens_set))
 res_food = st.checkbox("🍱 食物 food", value=("food" in res_tokens_set))
 res_water = st.checkbox("🚰 水 water", value=("water" in res_tokens_set))
 res_med = st.checkbox("💊 醫療用品 medical supplies", value=("medical supplies" in res_tokens_set))
@@ -260,7 +260,7 @@ res_other_text = st.text_input(
 )
 
 # 能力需求 skills：多選 + 其他（預設上一筆）
-st.markdown("#### 💪 希望志工具備的能力（skills，必填，可複選）")
+st.markdown("#### 💪 希望志工具備的能力 desired skills（必填，可複選）")
 sk_supplies = st.checkbox("📦 物資發放 supplies distribution", value=("supplies distribution" in sk_tokens_set))
 sk_cleaning = st.checkbox("🧹 清掃 cleaning", value=("cleaning" in sk_tokens_set))
 sk_medical = st.checkbox("🩺 醫療 medical", value=("medical" in sk_tokens_set))
@@ -278,14 +278,14 @@ sk_other_text = st.text_input(
 photo = st.text_input(
     "📸 地點當前照片連結（photo，必填）",
     value=prev_photo,
-    placeholder="建議先將照片上傳至 Google Drive，設定共用後再貼上分享網址（建議每日更新）",
+    placeholder="建議先將照片上傳至 Google Drive 雲端硬碟，設定共用後再貼上分享網址（建議每日更新）",
 )
 
 # 建議交通方式 transport：多選 + 其他（預設上一筆）
-st.markdown("#### 🚗 建議交通方式（transport，必填，可複選）")
+st.markdown("#### 🚗 建議交通方式 recommendations for transportation（必填，可複選）")
 tr_train = st.checkbox("🚆 火車 train", value=("train" in tr_tokens_set))
 tr_bus = st.checkbox("🚌 巴士 bus", value=("bus" in tr_tokens_set))
-tr_walk = st.checkbox("🚶‍♀️ 步行 walk", value=("walk" in tr_tokens_set))
+tr_walk = st.checkbox("🚶‍♀️ 步行 on foot", value=("walk" in tr_tokens_set))
 tr_car = st.checkbox("🚗 開車 car", value=("car" in tr_tokens_set))
 tr_scooter = st.checkbox("🛵 機車 scooter", value=("scooter" in tr_tokens_set))
 tr_bike = st.checkbox("🚲 腳踏車 bike", value=("bike" in tr_tokens_set))
@@ -298,7 +298,7 @@ tr_other_text = st.text_input(
 )
 
 # 備註：預設上一筆
-note = st.text_area("💬 備註 / 想說的話（note，可選填）", value=prev_note)
+note = st.text_area("💬 備註 / 想說的話 notes（可選填）", value=prev_note)
 
 # ---------- 把 checkbox 狀態組回字串 ----------
 def build_resources_string():
@@ -364,30 +364,30 @@ if st.button("✅ 送出今日受災需求"):
 
     row_number, row_series = find_victim_row(name, phone)
     if row_number is None:
-        st.error("❌ 找不到您的基本資料（role = victim）。請重新確認。")
+        st.error("❌ 找不到您的基本資料。請重新確認。")
         st.stop()
 
     if not selected_time_codes:
-        st.error("❌ 請至少選擇一個需要協助的時間時段（work_time）")
+        st.error("❌ 請至少選擇一個需要協助的時間時段。Choose at least one available time.")
         st.stop()
 
     resources_list = build_resources_string()
     if not resources_list:
-        st.error("❌ 請至少勾選一項『可提供的資源（resources）』")
+        st.error("❌ 請至少勾選一項『可提供的資源』。Choose at least one available resource.")
         st.stop()
 
     skills_list = build_skills_string()
     if not skills_list:
-        st.error("❌ 請至少勾選一項『希望志工具備的能力（skills）』")
+        st.error("❌ 請至少勾選一項『希望志工具備的能力』。Choose at least one desired skill.")
         st.stop()
 
     if not photo.strip():
-        st.error("❌ 地點照片連結（photo）為必填，請貼上分享網址。")
+        st.error("❌ 地點照片連結為必填，請貼上分享網址。Photo is required.")
         st.stop()
 
     transport_list = build_transport_string()
     if not transport_list:
-        st.error("❌ 請至少勾選一項『建議交通方式（transport）』")
+        st.error("❌ 請至少勾選一項『建議交通方式』。Choose at least one recommended mode of transportion.")
         st.stop()
 
     row = row_series.to_dict()
@@ -439,5 +439,5 @@ if st.button("✅ 送出今日受災需求"):
         st.success("✅ 已成功更新您『今天』的受災需求資料！")
         st.info("若明天需求有變化，可以再次進入本表單，只需調整有改變的項目即可。")
     except Exception as e:
-        st.error("❌ 更新 Google Sheet 失敗，請稍後再試。")
+        st.error("❌ 更新資料失敗，請稍後再試。")
         st.error(str(e))
