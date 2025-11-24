@@ -3,6 +3,9 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import re
+import io
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 # ---------- Google Sheet 連線 ----------
 creds = Credentials.from_service_account_info(
@@ -13,6 +16,52 @@ creds = Credentials.from_service_account_info(
     ],
 )
 gc = gspread.authorize(creds)
+
+# ---------- Google Drive 連線：用來存照片 ----------
+
+# 建立 Google Drive 服務（用同一組 service account）
+drive_service = build("drive", "v3", credentials=creds)
+
+# 你的照片資料夾 ID（就是你剛給的那一串）
+DRIVE_PHOTO_FOLDER_ID = "15BiA4lXDXvEPG7fX_GKIhjzhlLdaLiT8"
+
+
+def upload_photo_to_drive(uploaded_file):
+    """
+    將使用者透過 Streamlit 上傳的圖片檔案，存到 Google Drive 指定資料夾，
+    回傳一個可以直接用在 st.image() 的圖片網址。
+    """
+    if uploaded_file is None:
+        return None
+
+    # 確保從頭讀取檔案
+    uploaded_file.seek(0)
+    file_bytes = uploaded_file.read()
+    file_stream = io.BytesIO(file_bytes)
+
+    media = MediaIoBaseUpload(
+        file_stream,
+        mimetype=uploaded_file.type,  # ex: image/jpeg, image/png
+        resumable=False,
+    )
+
+    file_metadata = {
+        "name": uploaded_file.name,           # 檔名
+        "parents": [DRIVE_PHOTO_FOLDER_ID],   # 存到你指定的資料夾
+    }
+
+    # 上傳到 Google Drive，並取得檔案 ID
+    drive_file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id",
+    ).execute()
+
+    file_id = drive_file["id"]
+
+    # 產生可以直接當圖片來源的網址（不是預覽頁，而是圖檔本身）
+    photo_url = f"https://drive.google.com/uc?id={file_id}"
+    return photo_url
 
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
 ws = gc.open_by_key(SHEET_ID).worksheet("vol")  # 工作表名稱：vol
