@@ -53,7 +53,7 @@ if role == "victim":
     st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
 else:
     st.caption("＊請先填這一張，受災需求細節會在媒合介面呈現。")
-if st.button("送出基本資料"):
+if st.button("送出基本資料 submit"):
     if not name or not phone:
         st.error("❌ 姓名與電話為必填欄位")
     else:
