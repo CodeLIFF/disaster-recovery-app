@@ -90,6 +90,11 @@ if st.button("送出基本資料 submit"):
 
             try:
                 ws.append_row(row)
+                st.session_state["current_volunteer_id"] = id_number
+                st.session_state["current_volunteer_name"] = name
+                st.session_state["current_volunteer_phone"] = phone
+                st.session_state["current_volunteer_line"] = line_id
+
                 st.success(f"✅ 已成功送出基本資料！")
                 if role == "victim":
                     st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
