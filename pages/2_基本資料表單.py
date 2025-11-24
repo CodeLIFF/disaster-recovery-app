@@ -104,6 +104,6 @@ try:
     else:
         st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
 
-except Exception as e:
-    st.error("❌ 填寫失敗，請稍後再試。")
-    st.error(str(e))
+    except Exception as e:
+        st.error("❌ 填寫失敗，請稍後再試。")
+        st.error(str(e))
