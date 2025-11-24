@@ -5,7 +5,7 @@ from google.oauth2.service_account import Credentials
 
 # ---------- Google Sheet 連線 ----------
 creds = Credentials.from_service_account_info(
-    st.secrets["google"],
+    st.secrets["google_sheet"],
     scopes=[
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
