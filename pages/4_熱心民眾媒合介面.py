@@ -189,6 +189,15 @@ if st.session_state.accepted_task is not None:
     # 回寫 Google Sheet
     update_sheet(df)
 
+    # 回寫 Google Sheet
+    update_sheet(df)
+    
+    # 🔄 重新抓取最新資料
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
+    df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
+    df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
+
     st.success("🎉 你已成功接取此任務！")
 
     st.write(f"📌 任務名稱：{target_row['mission_name']}")
