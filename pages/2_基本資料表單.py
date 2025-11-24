@@ -63,47 +63,46 @@ if st.button("送出基本資料 submit"):
     elif not name or not phone:
         st.error("❌ 姓名與電話為必填欄位")
     else:
-        # 查重
         if is_duplicate(role, name, phone):
             st.warning("⚠ 已有相同身分＋姓名＋電話的紀錄，請不要重複填寫。")
         else:
             id_number = get_next_id_number()
-
-            # 依照欄位順序組成一整列，後面欄位先留空字串
             row = [
-                id_number,  # A: id_number
-                role,       # B: role
-                name,       # C: name
-                phone,      # D: phone
-                line_id,    # E: line_id
-                "",         # F: mission_name
-                "",         # G: address
-                "",         # H: work_time
-                "",         # I: demand_worker
-                "",         # J: selected_worker
-                "",         # K: resources
-                "",         # L: skills
-                "",         # M: photo
-                "",         # N: transport
-                "",         # O: note
+                id_number,  # id_number
+                role,       # role
+                name,       # name
+                phone,      # phone
+                line_id,    # line_id
+                "",         # mission_name
+                "",         # address
+                "",         # work_time
+                "",         # demand_worker
+                0,          # selected_worker（⚠ 這裡改成 0）
+                "",         # accepted_volunteers（⚠ 新欄位）
+                "",         # resources
+                "",         # skills
+                "",         # photo
+                "",         # transport
+                "",         # note
             ]
 
-try:
-    ws.append_row(row)
+            
 
-    # 🔐 設定 session 狀態
-    st.session_state["current_volunteer_id"] = id_number
-    st.session_state["current_volunteer_name"] = name
-    st.session_state["current_volunteer_phone"] = phone
-    st.session_state["current_volunteer_line"] = line_id
+            try:
+                ws.append_row(row)
 
-    st.success("✅ 已成功送出基本資料！")
+                st.session_state["current_volunteer_id"] = id_number
+                st.session_state["current_volunteer_name"] = name
+                st.session_state["current_volunteer_phone"] = phone
+                st.session_state["current_volunteer_line"] = line_id
 
-    if role == "victim":
-        st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
-    else:
-        st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
+                st.success("✅ 已成功送出基本資料！")
 
-    except Exception as e:
-        st.error("❌ 填寫失敗，請稍後再試。")
-        st.error(str(e))
+                if role == "victim":
+                    st.info("請接著前往「受災需求表單」頁面填寫詳細需求。")
+                else:
+                    st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
+
+            except Exception as e:
+                st.error("❌ 填寫失敗，請稍後再試。")
+                st.error(str(e))
