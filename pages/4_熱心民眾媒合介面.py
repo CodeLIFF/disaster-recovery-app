@@ -21,26 +21,25 @@ gc = gspread.authorize(creds)
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
 sheet = gc.open_by_key(SHEET_ID).sheet1
 
-# 讀取資料
+# -----------------------------------
+# 讀取資料（只讀一次，避免 df 被覆蓋）
+# -----------------------------------
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
 
-# 清理欄位（避免空白、大小寫問題）
+# 清欄位空白
 df.columns = df.columns.str.strip()
 
-# 型別轉換 新加
+# 修正欄位名（你的表格 id 是 id_number）
+if "id_number" in df.columns:
+    df["id_number"] = pd.to_numeric(df["id_number"], errors="coerce").fillna(0).astype(int)
+
 df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
 df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
-df["id"] = pd.to_numeric(df["id"], errors="coerce").astype(int)
-#--------------讓未填受災戶需求表單的資料不要呈現------------------
-# 1. 讀取 Google Sheet
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
 
-# 2. 清欄位（建議）
-df.columns = df.columns.str.strip()
-
-# 3. ★★★ 只顯示有填詳細資訊的受災戶（請放在這裡） ★★★
+# -----------------------------------
+# 過濾掉「只有註冊但未填需求」的人
+# -----------------------------------
 required_cols = ["mission_name", "address", "work_time", "demand_worker"]
 
 df = df.dropna(subset=required_cols)
@@ -49,29 +48,28 @@ df = df[
     (df["mission_name"] != "") &
     (df["address"] != "") &
     (df["work_time"] != "") &
-    (df["demand_worker"] != "")
+    (df["demand_worker"] != 0)
 ]
 
-# 4. 進入 UI 篩選 + 顯示卡片
-keyword = st.text_input("搜尋關鍵字")
-
-
-# ---------------- 更新 Google Sheet 函式 ----------------新加
+# -----------------------------------
+# 更新 Google Sheet 函式
+# -----------------------------------
 def update_sheet(updated_df):
     sheet.clear()
     sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
 
-
-# ---------------- UI ----------------
-st.title("災後人力媒合平台（志工端）")
+# -----------------------------------
+# 前端 UI
+# -----------------------------------
+st.title("災後人力媒合平台（熱心民眾端）")
 st.caption("以下為受災戶上傳的最新需求")
 
 keyword = st.text_input("搜尋（地址、能力、備註、提供資源）")
 
 filtered = df.copy()
 
-# 搜尋邏輯
 if keyword:
+    keyword = keyword.strip()
     filtered = filtered[
         filtered["address"].str.contains(keyword, case=False) |
         filtered["skills"].str.contains(keyword, case=False) |
@@ -82,17 +80,18 @@ if keyword:
 st.write(f"共 {len(filtered)} 筆需求")
 st.markdown("---")
 
-# 初始化 session_state 新加
+# 初始化 session state
 if "accepted_task" not in st.session_state:
     st.session_state.accepted_task = None
 
-# ---------------- 卡片列表 ----------------
+# -----------------------------------
+# 卡片列表
+# -----------------------------------
 for idx, row in filtered.iterrows():
     left, right = st.columns([2, 1])
 
-    # 左邊資訊文字
     with left:
-        st.markdown(f"## 📍 {row['address']}")
+        st.markdown(f"## 📍 {row['mission_name']} — {row['address']}")
         st.markdown(f"**🕒 工作時間：** {row['work_time']}")
         st.markdown(f"**👥 需求人數：** {row['selected_worker']} / {row['demand_worker']}")
         st.markdown(f"**🧰 提供資源：** {row['resources']}")
@@ -100,17 +99,15 @@ for idx, row in filtered.iterrows():
         st.markdown(f"**🚗 交通建議：** {row['transport']}")
         st.markdown(f"**📝 備註：** {row['note']}")
 
-        st.link_button("我要報名", "https://forms.gle/your-form-url")
-        # 判斷是否還能報名 新加
+        # 人數已滿
         if row["selected_worker"] >= row["demand_worker"]:
             st.error("❌ 此任務人數已足夠，無法再報名")
         else:
-            if st.button("我要報名", key=f"apply_{row['id']}"):
-                st.session_state.accepted_task = row["id"]
+            # 用 id_number 當 key
+            if st.button("我要報名", key=f"apply_{row['id_number']}"):
+                st.session_state.accepted_task = row["id_number"]
                 st.rerun()
 
-
-    # 右邊照片
     with right:
         if row["photo"]:
             st.image(row["photo"], use_column_width=True)
@@ -118,26 +115,33 @@ for idx, row in filtered.iterrows():
             st.info("尚無照片")
 
     st.markdown("---")
-# =============================
-# 顯示接取結果 + 更新資料
-# =============================
+
+# -------------------------------------------------
+# 接受任務後：更新 Google Sheet
+# -------------------------------------------------
 if st.session_state.accepted_task is not None:
 
     task_id = st.session_state.accepted_task
 
-    task = df[df["id"] == task_id].iloc[0]
+    # 找出該任務
+    target_row = df[df["id_number"] == task_id].iloc[0]
 
-    # 更新數量
-    df.loc[df["id"] == task_id, "selected_worker"] += 1
+    # 更新 selected_worker
+    df.loc[df["id_number"] == task_id, "selected_worker"] += 1
 
     # 回寫 Google Sheet
     update_sheet(df)
 
     st.success("🎉 你已成功接取此任務！")
-    st.info(f"📞 受災戶聯絡資訊：{task['contact']}")
 
-    updated = df[df["id"] == task_id].iloc[0]
+    st.write(f"📌 任務名稱：{target_row['mission_name']}")
+    st.write(f"📍 地址：{target_row['address']}")
+    st.write(f"☎️ 電話：{target_row['phone']}")
+    st.write(f"LINE：{target_row['line_id']}")
+
+    updated = df[df["id_number"] == task_id].iloc[0]
     st.write(f"🎯 更新後已選志工：{updated['selected_worker']} 人")
 
-    # 清除狀態避免重複顯示
+    # 觸發結束後重整頁面，不重複顯示
     st.session_state.accepted_task = None
+    st.rerun()
