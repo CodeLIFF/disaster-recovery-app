@@ -48,6 +48,18 @@ translate = {
     "scooter": "機車",
 }
 
+def t(value):
+    """把英文轉成 中文(英文) 的格式"""
+    value = value.strip()
+    if value in translate:
+        return f"{translate[value]} ({value})"
+    return value
+
+def translate_list(text):
+    parts = [p.strip() for p in text.split(",")]
+    translated = [t(p) for p in parts if p]
+    return "、".join(translated)
+
 # 清欄位空白
 df.columns = df.columns.str.strip()
 
@@ -119,11 +131,11 @@ for idx, row in filtered.iterrows():
 
     with left:
         st.markdown(f"## 📍 {row['mission_name']} — {row['address']}")
-        st.markdown(f"**🕒 工作時間：** {row['work_time']}")
-        st.markdown(f"**👥 需求人數：** {row['selected_worker']} / {row['demand_worker']}")
-        st.markdown(f"**🧰 提供資源：** {row['resources']}")
-        st.markdown(f"**💪 能力需求：** {row['skills']}")
-        st.markdown(f"**🚗 交通建議：** {row['transport']}")
+        st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}")
+        st.markdown(f"**👥 需求人數：** {translate_list(row['selected_worker'])} / {translate_list(row['demand_worker'])}")
+        st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}")
+        st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}")
+        st.markdown(f"**🚗 交通建議：** {translate_list(row['transport'])}")
         st.markdown(f"**📝 備註：** {row['note']}")
 
         # 人數已滿
