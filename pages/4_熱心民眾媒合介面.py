@@ -26,6 +26,12 @@ sheet = gc.open_by_key(SHEET_ID).sheet1
 # -----------------------------------
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
+text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
+               "skills", "resources", "transport", "note", "photo"]
+
+for col in text_fields:
+    if col in df.columns:
+        df[col] = df[col].fillna("").astype(str)
 
 # 清欄位空白
 df.columns = df.columns.str.strip()
@@ -54,9 +60,20 @@ df = df[
 # -----------------------------------
 # 更新 Google Sheet 函式
 # -----------------------------------
+#def update_sheet(updated_df):
+    #sheet.clear()
+    #sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
 def update_sheet(updated_df):
+    clean_df = updated_df.fillna("").astype(str)
+    rows = [clean_df.columns.tolist()] + clean_df.values.tolist()
+
     sheet.clear()
-    sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+
+    for i in range(0, len(rows), 500):
+        sheet.update(
+            f"A{i+1}",
+            rows[i:i+500]
+        )
 
 # -----------------------------------
 # 前端 UI
