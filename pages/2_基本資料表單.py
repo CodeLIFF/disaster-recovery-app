@@ -57,6 +57,9 @@ if role == "victim":
 else:
     st.caption("＊請先填這一張，受災需求細節會在媒合介面呈現。")
 if st.button("送出基本資料 submit"):
+    if not phone.isdigit() or len(phone) != 10:
+        st.error("❌ 電話格式應為 10 位數字，請修正後再送出。")
+    
     if not name or not phone:
         st.error("❌ 姓名與電話為必填欄位")
     else:
