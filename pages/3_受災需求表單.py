@@ -281,10 +281,12 @@ sk_other_text = st.text_input(
 )
 
 # 地點照片：仍為必填，但預設帶入上一張連結（鼓勵可以換成今日照片）
+st.markdown("#### 📸 地點當前照片連結 photo（必填）")
 photo = st.text_input(
-    "📸 地點當前照片連結（photo，必填）",
-    value=prev_photo,
+    "地點當前照片連結 photo",   # 真正的 label（但等一下會被藏起來）
+    value=prev_photo,            # 如果有前一天的資料，就預設帶入；沒有這個變數就刪掉這行
     placeholder="建議先將照片上傳至 Google Drive 雲端硬碟，設定共用後再貼上分享網址（建議每日更新）",
+    label_visibility="collapsed",  # 🔑 收起 label，連那行空白一起消失
 )
 
 # 建議交通方式 transport：多選 + 其他（預設上一筆）
@@ -295,7 +297,7 @@ tr_walk = st.checkbox("🚶‍♀️ 步行 on foot", value=("walk" in tr_tokens
 tr_car = st.checkbox("🚗 開車 car", value=("car" in tr_tokens_set))
 tr_scooter = st.checkbox("🛵 機車 scooter", value=("scooter" in tr_tokens_set))
 tr_bike = st.checkbox("🚲 腳踏車 bike", value=("bike" in tr_tokens_set))
-tr_other = st.checkbox("➕ 其他 other transport", value=bool(tr_other_text_default))
+tr_other = st.checkbox("➕ 其他 other transportation", value=bool(tr_other_text_default))
 
 tr_other_text = st.text_input(
     "請說明其他交通方式",
@@ -360,7 +362,7 @@ def build_transport_string():
     return items
 
 # ================== 送出，寫回同一列 ================== #
-if st.button("✅ 送出今日受災需求"):
+if st.button("✅ 送出今日受災需求 submit"):
     if not st.session_state.get("victim_verified", False):
         st.error("❌ 請先完成『身分驗證』。")
         st.stop()
