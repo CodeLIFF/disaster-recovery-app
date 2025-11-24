@@ -49,6 +49,9 @@ name = st.text_input("姓名 name")
 phone = st.text_input("電話 phone number")
 line_id = st.text_input("Line ID")
 
+if phone and (not phone.isdigit() or len(phone) != 10):
+    st.warning("電話格式應為 10 位數字")
+
 if role == "victim":
     st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
 else:
