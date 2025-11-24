@@ -208,11 +208,13 @@ st.subheader("③ 📋 填寫／更新今日的受災需求")
 
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
 st.markdown("#### 📝 任務名稱 task name（可留白）")
+
 mission_name = st.text_input(
-    "",
+    "任務名稱 task name",        # 這個 label 不會顯示出來，因為我們把它 collapse 掉了
     value=prev_mission,
     placeholder="可填大致地點與主要需求，例如：花蓮縣某某里住家清理",
     help="若留白，系統會自動以地址當作任務名稱。",
+    label_visibility="collapsed",  # 🔑 這行讓 label 和那條空白都消失
 )
 
 # 工作時間：多選（預設為上一筆設定）
@@ -233,13 +235,16 @@ selected_time_labels = st.multiselect(
 )
 selected_time_codes = [time_options[label] for label in selected_time_labels]
 
-# 人力需求：預設上一筆的需求人數
+# 人力需求：標題 + 數字輸入
+st.markdown("#### 👥 總人數需求 required number of people（必填，上限 20人）")
+
 demand_worker = st.number_input(
-    "#### 👥 總人數需求 required number of people（必填，上限20人）",
+    "總人數需求 required number of people",
     min_value=1,
     max_value=20,
     step=1,
     value=prev_demand,
+    label_visibility="collapsed",  # 🔑 不顯示內建 label，只留下上面的 #### 標題
 )
 
 st.markdown("---")
