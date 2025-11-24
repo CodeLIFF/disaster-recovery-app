@@ -235,7 +235,7 @@ selected_time_codes = [time_options[label] for label in selected_time_labels]
 
 # 人力需求：預設上一筆的需求人數
 demand_worker = st.number_input(
-    "👥 總人數需求 required number of people（必填，上限20人）",
+    "#### 👥 總人數需求 required number of people（必填，上限20人）",
     min_value=1,
     max_value=20,
     step=1,
@@ -283,7 +283,7 @@ photo = st.text_input(
 )
 
 # 建議交通方式 transport：多選 + 其他（預設上一筆）
-st.markdown("#### 🚗 建議交通方式 recommendations for transportation（必填，可複選）")
+st.markdown("#### 🚗 建議交通方式 suggested transportation（必填，可複選）")
 tr_train = st.checkbox("🚆 火車 train", value=("train" in tr_tokens_set))
 tr_bus = st.checkbox("🚌 巴士 bus", value=("bus" in tr_tokens_set))
 tr_walk = st.checkbox("🚶‍♀️ 步行 on foot", value=("walk" in tr_tokens_set))
@@ -388,7 +388,7 @@ if st.button("✅ 送出今日受災需求"):
 
     transport_list = build_transport_string()
     if not transport_list:
-        st.error("❌ 請至少勾選一項『建議交通方式』。Choose at least one recommended mode of transportion.")
+        st.error("❌ 請至少勾選一項『建議交通方式』。Choose at least one suggested transportion.")
         st.stop()
 
     row = row_series.to_dict()
