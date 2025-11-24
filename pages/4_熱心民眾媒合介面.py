@@ -33,6 +33,16 @@ df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fi
 df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
 df["id"] = pd.to_numeric(df["id"], errors="coerce").astype(int)
 
+required_cols = ["mission_name", "address", "work_time", "demand_worker"]
+
+df = df.dropna(subset=required_cols)  # 去掉 NA
+df = df[
+    (df["mission_name"] != "") &
+    (df["address"] != "") &
+    (df["work_time"] != "") &
+    (df["demand_worker"] != "")
+]
+
 # ---------------- 更新 Google Sheet 函式 ----------------新加
 def update_sheet(updated_df):
     sheet.clear()
