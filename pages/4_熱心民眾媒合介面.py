@@ -154,7 +154,6 @@ for idx, row in filtered.iterrows():
 
     st.markdown("---")
     
-
 # -------------------------------------------------
 # 接受任務後：更新 Google Sheet
 # -------------------------------------------------
@@ -162,11 +161,30 @@ if st.session_state.accepted_task is not None:
 
     task_id = st.session_state.accepted_task
 
+    # 📌 取得目前志工 Session（身份驗證）
+    vol_id = st.session_state.get("current_volunteer_id")
+    vol_name = st.session_state.get("current_volunteer_name")
+    vol_phone = st.session_state.get("current_volunteer_phone")
+    vol_line = st.session_state.get("current_volunteer_line")
+
+    if not vol_id:
+        st.error("⚠ 請先至「基本資料表單」填寫志工資料！")
+        st.stop()
+
     # 找出該任務
     target_row = df[df["id_number"] == task_id].iloc[0]
 
     # 更新 selected_worker
     df.loc[df["id_number"] == task_id, "selected_worker"] += 1
+
+    # 更新 accepted_volunteers 欄位
+    current = str(df.loc[df["id_number"] == task_id, "accepted_volunteers"].values[0])
+    if current not in ["", "nan"]:
+        new_value = current + f"|{vol_id}:{vol_name}:{vol_phone}:{vol_line}"
+    else:
+        new_value = f"{vol_id}:{vol_name}:{vol_phone}:{vol_line}"
+
+    df.loc[df["id_number"] == task_id, "accepted_volunteers"] = new_value
 
     # 回寫 Google Sheet
     update_sheet(df)
@@ -177,10 +195,10 @@ if st.session_state.accepted_task is not None:
     st.write(f"📍 地址：{target_row['address']}")
     st.write(f"☎️ 電話：{target_row['phone']}")
     st.write(f"LINE：{target_row['line_id']}")
+    st.write(f"👤 你已登記為此任務志工：{vol_name}")
 
-    updated = df[df["id_number"] == task_id].iloc[0]
-    st.write(f"🎯 更新後已選志工：{updated['selected_worker']} 人")
-
-    # 觸發結束後重整頁面，不重複顯示
+    # 🔄 重置 Session 防止重複報名
     st.session_state.accepted_task = None
     st.rerun()
+
+
