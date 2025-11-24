@@ -143,6 +143,62 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+time_display = {
+    "morning": "🌅 早上 (08:00–11:00)",
+    "noon": "🌞 中午 (11:00–13:00)",
+    "afternoon": "🌇 下午 (13:00–17:00)",
+    "night": "🌃 晚上 (17:00–19:00)",
+} 
+skills_display = {
+    "supplies distribution": "📦 物資發放",
+    "cleaning": "🧹 清掃",
+    "medical": "🩺 醫療",
+    "heavy lifting": "🏋️ 搬運",
+    "driver's license": "🚗 駕照",
+    "other skills": "✨ 其他",
+}
+resources_display = {
+    "tools": "🛠 工具",
+    "food": "🍱 食物",
+    "water": "🚰 水",
+    "medical supplies": "💊 醫療用品",
+    "hygiene supplies": "🧻 衛生用品",
+    "accommodation": "🏠 住宿",
+    "other resources": "➕ 其他",
+}
+transport_display = {
+    "train": "🚆 火車",
+    "bus": "🚌 巴士",
+    "on foot": "🚶‍♀️ 步行",
+    "car": "🚗 開車",
+    "scooter": "🛵 機車",
+    "bike": "🚲 腳踏車",
+    "other transportation": "➕ 其他",
+}
+def render_labels(text, mapping_dict, color="#FFD9C0"):
+    """
+    text: 例如 "morning, afternoon"
+    mapping_dict: 對應的翻譯字典
+    color: 背景顏色（可自訂）
+    """
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    labels = []
+
+    for p in parts:
+        label = mapping_dict.get(p, p)
+        html = f"""
+        <span style="
+            background:{color};
+            padding:4px 8px;
+            margin-right:6px;
+            border-radius:6px;
+            display:inline-block;
+        ">{label}</span>
+        """
+        labels.append(html)
+
+    return "".join(labels)
+
 # -----------------------------------
 # 卡片列表
 # -----------------------------------
@@ -150,16 +206,21 @@ for idx, row in filtered.iterrows():
     left, right = st.columns([2, 1])
 
     with left:
-        st.markdown(f"## 📍 {row['mission_name']} — {row['address']}")
-        st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}")
+        st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}", unsafe_allow_html=True)
+        st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
         st.markdown(f"**👥 需求人數：** {row['selected_worker']} / {row['demand_worker']}")
-        st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}")
-        st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}")
-        st.markdown(f"**🚗 交通建議：** {translate_list(row['transport'])}")
+        st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}", unsafe_allow_html=True)
+        st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
+        st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}", unsafe_allow_html=True)
+        st.markdown(render_labels(row["skills"], skills_display, "#E8F5E9"), unsafe_allow_html=True)
+        st.markdown(f"**🚗 交通建議：** {translate_list(row['transport'])}", unsafe_allow_html=True)
+        st.markdown(render_labels(row["transport"], transport_display, "#E3F2FD"), unsafe_allow_html=True)
         st.markdown(f"**📝 備註：** {row['note']}")
 
+        vol_id = st.session_state.get("current_volunteer_id", "")
+
         accepted = str(row.get("accepted_volunteers", "")).split("|")
-        already_joined = any(vol_id in item for item in accepted if vol_id)
+        already_joined = any(item.startswith(vol_id + ":") for item in accepted if item.strip())
         
         # 人數已滿
         if row["selected_worker"] >= row["demand_worker"]:
