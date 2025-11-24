@@ -7,25 +7,24 @@ import io
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
-# ------------- Google Sheet 用 Service Account -------------
-sheet_creds = Credentials.from_service_account_info(
-    st.secrets["google_sheet"],
-    scopes=["https://www.googleapis.com/auth/spreadsheets"],
+# ---------- Google Service Account：一組搞定 ----------
+creds = Credentials.from_service_account_info(
+    st.secrets["google"],
+    scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ],
 )
-gc = gspread.authorize(sheet_creds)
 
+# Google Sheet
+gc = gspread.authorize(creds)
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
 ws = gc.open_by_key(SHEET_ID).worksheet("vol")
 
-# ------------- Google Drive 用 Service Account -------------
-drive_creds = Credentials.from_service_account_info(
-    st.secrets["google_drive"],
-    scopes=["https://www.googleapis.com/auth/drive"],
-)
+# Google Drive
+drive_service = build("drive", "v3", credentials=creds)
+DRIVE_PHOTO_FOLDER_ID = "15BiA4lXDXvEPG7fX_GKIhjzhlLdaLiT8"
 
-drive_service = build("drive", "v3", credentials=drive_creds)
-
-DRIVE_PHOTO_FOLDER_ID = "127b9DtmcXfxhFRD1-1mgYpvcHX7z6Fas"
 
 
 
@@ -48,7 +47,6 @@ def upload_photo_to_drive(uploaded_file):
         "parents": [DRIVE_PHOTO_FOLDER_ID],
     }
 
-    # 使用 Drive 帳號上傳
     drive_file = drive_service.files().create(
         body=file_metadata,
         media_body=media,
@@ -57,6 +55,7 @@ def upload_photo_to_drive(uploaded_file):
 
     file_id = drive_file["id"]
     return f"https://drive.google.com/uc?id={file_id}"
+
 
 
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
@@ -494,7 +493,6 @@ if st.button("✅ 送出今日受災需求 submit"):
         "work_time",
         "demand_worker",
         "selected_worker",
-        "accepted_volunteers",
         "resources",
         "skills",
         "photo",
