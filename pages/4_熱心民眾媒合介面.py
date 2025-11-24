@@ -123,6 +123,23 @@ st.markdown("---")
 if "accepted_task" not in st.session_state:
     st.session_state.accepted_task = None
 
+st.markdown("""
+<style>
+.label {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 14px;
+    color: white;
+}
+.time { background-color: #4A90E2; }
+.skill { background-color: #7B61FF; }
+.resource { background-color: #F5A623; }
+.transport { background-color: #50C878; }
+</style>
+""", unsafe_allow_html=True)
+
 # -----------------------------------
 # 卡片列表
 # -----------------------------------
