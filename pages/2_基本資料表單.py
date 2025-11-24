@@ -60,7 +60,7 @@ if st.button("送出基本資料 submit"):
     if not phone.isdigit() or len(phone) != 10:
         st.error("❌ 電話格式應為 10 位數字，請修正後再送出。")
     
-    if not name or not phone:
+    elif not name or not phone:
         st.error("❌ 姓名與電話為必填欄位")
     else:
         # 查重
