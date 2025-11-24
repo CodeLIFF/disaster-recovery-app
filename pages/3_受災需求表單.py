@@ -209,6 +209,7 @@ st.subheader("③ 📋 填寫／更新今日的受災需求")
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
 st.markdown("#### 📝 任務名稱 task name（可留白）")
 mission_name = st.text_input(
+    "",
     value=prev_mission,
     placeholder="可填大致地點與主要需求，例如：花蓮縣某某里住家清理",
     help="若留白，系統會自動以地址當作任務名稱。",
