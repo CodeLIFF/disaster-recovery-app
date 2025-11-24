@@ -68,12 +68,7 @@ def update_sheet(updated_df):
     rows = [clean_df.columns.tolist()] + clean_df.values.tolist()
 
     sheet.clear()
-
-    for i in range(0, len(rows), 500):
-        sheet.update(
-            f"A{i+1}",
-            rows[i:i+500]
-        )
+    sheet.update("A1", rows)
 
 # -----------------------------------
 # 前端 UI
@@ -126,12 +121,24 @@ for idx, row in filtered.iterrows():
                 st.rerun()
 
     with right:
-        if row["photo"]:
-            st.image(row["photo"], use_column_width=True)
+        #if row["photo"]:
+            #st.image(row["photo"], use_column_width=True)
+        #else:
+            #st.info("尚無照片")
+        
+        photo_url = str(row.get("photo", "")).strip()
+
+        # 只接受 HTTP 開頭的圖片連結
+        if photo_url.startswith("http"):
+            try:
+                st.image(photo_url, use_column_width=True)
+            except:
+                st.warning("📷 照片載入失敗（連結格式可能錯誤）")
         else:
             st.info("尚無照片")
 
     st.markdown("---")
+    
 
 # -------------------------------------------------
 # 接受任務後：更新 Google Sheet
