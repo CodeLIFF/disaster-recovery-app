@@ -12,7 +12,7 @@ SCOPES = [
 ]
 
 creds = Credentials.from_service_account_info(
-    st.secrets["google"],
+    st.secrets["google_sheet"],
     scopes=SCOPES
 )
 
