@@ -99,8 +99,9 @@ if st.session_state.get("page") == "signup":
 
         if task_id:
             # 找出任務目前 selected_worker 欄位所在 row
-            task_idx = df[df["id_number"] == task_id].index
-            df.loc[task_idx, "selected_worker"] += 1
+            sheet.update_cell(task_idx[0] + 2, df.columns.get_loc("selected_worker") + 1,
+                  int(df.loc[task_idx, "selected_worker"].values[0]))
+
 
             # 新增一筆志工資料到 Google Sheet
             new_row = [
@@ -137,19 +138,6 @@ df = df[
     (df["work_time"] != "") &
     (df["demand_worker"] != 0)
 ]
-
-# -----------------------------------
-# 更新 Google Sheet 函式
-# -----------------------------------
-#def update_sheet(updated_df):
-    #sheet.clear()
-    #sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-def update_sheet(updated_df):
-    clean_df = updated_df.fillna("").astype(str)
-    rows = [clean_df.columns.tolist()] + clean_df.values.tolist()
-
-    sheet.clear()
-    sheet.update("A1", rows)
 
 # -----------------------------------
 # 前端 UI
