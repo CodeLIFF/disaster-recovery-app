@@ -26,6 +26,12 @@ sheet = gc.open_by_key(SHEET_ID).sheet1
 # -----------------------------------
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
+missions = df[df["role"] == "victim"].copy()
+volunteers = df[df["role"] == "volunteer"].copy()
+
+missions["id_number"] = pd.to_numeric(missions["id_number"], errors="coerce").fillna(0).astype(int)
+volunteers["id_number"] = pd.to_numeric(volunteers["id_number"], errors="coerce").fillna(0).astype(int)
+
 text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
                "skills", "resources", "transport", "note", "photo"]
 
@@ -208,7 +214,17 @@ for idx, row in filtered.iterrows():
     with left:
         st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}", unsafe_allow_html=True)
         st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
-        st.markdown(f"**👥 需求人數：** {row['selected_worker']} / {row['demand_worker']}")
+        current_count = len(volunteers[volunteers["id_number"] == row["id_number"]])
+        st.markdown(f"**👥 需求人數：** {current_count} / {row['demand_worker']}")
+        # 顯示已報名志工名單
+        vols = volunteers[volunteers["id_number"] == row["id_number"]]
+        
+        if not vols.empty:
+            st.write("👥 已報名志工：")
+            for _, vol in vols.iterrows():
+                phone = vol["phone"]
+                masked_phone = phone[:4] + "****"  # 遮蔽後四碼
+                st.write(f"- {vol['name']}（{masked_phone}）")
         st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}", unsafe_allow_html=True)
         st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
         st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}", unsafe_allow_html=True)
@@ -218,9 +234,13 @@ for idx, row in filtered.iterrows():
         st.markdown(f"**📝 備註：** {row['note']}")
 
         vol_id = st.session_state.get("current_volunteer_id", "")
+        vol_phone = st.session_state.get("current_volunteer_phone", "")
+        already_joined = len(volunteers[
+            (volunteers["phone"] == vol_phone) &
+            (volunteers["id_number"] == row["id_number"])
+        ]) > 0
 
-        accepted = str(row.get("accepted_volunteers", "")).split("|")
-        already_joined = any(item.startswith(vol_id + ":") for item in accepted if item.strip())
+
         
         # 人數已滿
         if row["selected_worker"] >= row["demand_worker"]:
@@ -271,40 +291,24 @@ if st.session_state.accepted_task is not None:
     # 找出該任務
     target_row = df[df["id_number"] == task_id].iloc[0]
 
-    # 更新 selected_worker
-    df.loc[df["id_number"] == task_id, "selected_worker"] += 1
-
-    # 更新 accepted_volunteers 欄位
-    current = str(df.loc[df["id_number"] == task_id, "accepted_volunteers"].values[0])
-    if current not in ["", "nan"]:
-        new_value = current + f"|{vol_id}:{vol_name}:{vol_phone}:{vol_line}"
-    else:
-        new_value = f"{vol_id}:{vol_name}:{vol_phone}:{vol_line}"
-
-    df.loc[df["id_number"] == task_id, "accepted_volunteers"] = new_value
-
-    # 回寫 Google Sheet（一次就好）
-    update_sheet(df)
+    new_row = [
+        "volunteer",      # role
+        task_id,          # id_number
+        vol_name or "",
+        vol_phone or "",
+        vol_line or "",
+    ]
     
-    # 🔄 重新抓取最新資料
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
+    # 填滿所有欄位：避免欄位往右錯位
+    while len(new_row) < len(df.columns):
+        new_row.append("")
     
-    # 數值欄位型別修復
-    df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
-    df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
+    sheet.append_row(new_row)
     
-    st.success("🎉 你已成功接取此任務！")
-    
-    # 顯示確認資訊
-    st.write(f"📌 任務名稱：{target_row['mission_name']}")
-    st.write(f"📍 地址：{target_row['address']}")
-    st.write(f"☎️ 電話：{target_row['phone']}")
-    st.write(f"LINE：{target_row['line_id']}")
-    st.write(f"👤 你已登記為此任務志工：{vol_name}")
-    
-    # 🔄 重置 Session 防止重複報名
+    # 🔄 reset & refresh
     st.session_state.accepted_task = None
     st.rerun()
+
+    
 
 
