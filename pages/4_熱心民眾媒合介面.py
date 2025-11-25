@@ -24,20 +24,6 @@ sheet = gc.open_by_key(SHEET_ID).sheet1
 # -----------------------------------
 # 讀取資料（只讀一次，避免 df 被覆蓋）
 # -----------------------------------
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
-missions = df[df["role"] == "victim"].copy()
-volunteers = df[df["role"] == "volunteer"].copy()
-
-missions["id_number"] = pd.to_numeric(missions["id_number"], errors="coerce").fillna(0).astype(int)
-volunteers["id_number"] = pd.to_numeric(volunteers["id_number"], errors="coerce").fillna(0).astype(int)
-
-text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
-               "skills", "resources", "transport", "note", "photo"]
-
-for col in text_fields:
-    if col in df.columns:
-        df[col] = df[col].fillna("").astype(str)
 translate = {
     "morning": "早上",
     "noon": "中午",
@@ -53,6 +39,33 @@ translate = {
     "walk": "步行",
     "scooter": "機車",
 }
+# -----------------------------------
+# 讀取資料（只讀一次，避免 df 被覆蓋）
+# -----------------------------------
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
+
+# 清欄位空白
+df.columns = df.columns.str.strip()
+
+# 先處理數值欄位
+if "id_number" in df.columns:
+    df["id_number"] = pd.to_numeric(df["id_number"], errors="coerce").fillna(0).astype(int)
+
+df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
+df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
+
+# 統一文字欄位型態（包含 phone）
+text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
+               "skills", "resources", "transport", "note", "photo"]
+
+for col in text_fields:
+    if col in df.columns:
+        df[col] = df[col].fillna("").astype(str)
+
+# 在「清洗完成後」再切出 missions / volunteers
+missions = df[df["role"] == "victim"].copy()
+volunteers = df[df["role"] == "volunteer"].copy()
 
 def t(value):
     """把英文轉成 中文(英文) 的格式"""
@@ -65,16 +78,6 @@ def translate_list(text):
     parts = [p.strip() for p in text.split(",")]
     translated = [t(p) for p in parts if p]
     return "、".join(translated)
-
-# 清欄位空白
-df.columns = df.columns.str.strip()
-
-# 修正欄位名（你的表格 id 是 id_number）
-if "id_number" in df.columns:
-    df["id_number"] = pd.to_numeric(df["id_number"], errors="coerce").fillna(0).astype(int)
-
-df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
-df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
 
 # === 志工基本資料填寫頁 ===
 if st.session_state.get("page") == "signup":
@@ -104,11 +107,11 @@ if st.session_state.get("page") == "signup":
         if task_id:
 
             # 在寫入前再次確認沒有重複報名
-            already_joined = len(df[
-                (df["phone"] == phone) &
-                (df["id_number"] == task_id)
+            already_joined = len(volunteers[
+                (volunteers["phone"] == phone) &
+                (volunteers["id_number"] == task_id)
             ]) > 0
-        
+            
             if already_joined:
                 st.error("⚠ 您已報名過此任務，請勿重複報名 🙏")
                 st.stop()
