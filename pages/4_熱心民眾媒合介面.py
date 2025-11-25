@@ -106,8 +106,8 @@ if st.session_state.get("page") == "signup":
             df.loc[task_idx, "selected_worker"] += 1
     
             new_row = [
-                "volunteer",
                 task_id,
+                "volunteer",
                 name,
                 phone,
                 line_id,
