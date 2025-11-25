@@ -251,17 +251,13 @@ for idx, row in filtered.iterrows():
         vols = volunteers[volunteers["id_number"] == row["id_number"]]
         
         if not vols.empty:
-            st.write("👥 已報名志工：")
-            for _, vol in vols.iterrows():
-                phone = str(vol["phone"])
-        
-                # 台灣手機：09xxxxxxxx
-                if len(phone) == 10 and phone.startswith("09"):
-                    display_phone = phone[-3:]  # 僅顯示後三碼
-                else:
-                    display_phone = "???"
-        
-                st.write(f"- {vol['name']}（{display_phone}）")
+        st.write("👥 已報名志工：")
+        for _, vol in vols.iterrows():
+            phone = str(vol["phone"]).strip()
+    
+            display_phone = phone[-3:]  # 顯示後三碼
+
+            st.write(f"- {vol['name']}（{display_phone}）")
         st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}", unsafe_allow_html=True)
         st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
         st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}", unsafe_allow_html=True)
