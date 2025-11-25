@@ -287,7 +287,7 @@ for idx, row in filtered.iterrows():
             if st.button("我要報名", key=f"apply_{row['id_number']}"):
                 st.session_state["page"] = "signup"  # 跳到填資料頁
                 st.session_state["selected_task_id"] = row["id_number"]  # 記住是報哪個任務
-                st.experimental_rerun()
+                st.rerun()
         
 
     with right:
