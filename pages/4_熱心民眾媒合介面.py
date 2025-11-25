@@ -105,8 +105,8 @@ if st.session_state.get("page") == "signup":
 
             # 新增一筆志工資料到 Google Sheet
             new_row = [
-                "volunteer",
                 task_id,
+                "volunteer",
                 name,
                 phone,
                 line_id,
