@@ -117,11 +117,11 @@ if st.session_state.get("page") == "signup":
             # 把 updated 的 df 回寫回去（包含 selected_worker +1）
             update_sheet(df)
 
-        st.success("🎉 報名成功！感謝您伸出援手 ❤️")
-        st.session_state["page"] = "task_list"
-        st.rerun()
-
-    st.stop()
+            st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+            st.session_state["page"] = "task_list"
+            st.rerun()
+    
+        st.stop()
 
 
 
