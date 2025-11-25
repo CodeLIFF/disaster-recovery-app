@@ -278,7 +278,7 @@ for idx, row in filtered.iterrows():
 
         
         # 人數已滿
-        if row["selected_worker"] >= row["demand_worker"]:
+        if current_count >= row["demand_worker"]:
             st.error("❌ 此任務人數已足夠")
         elif already_joined:
             st.success("✔ 你已報名此任務")
