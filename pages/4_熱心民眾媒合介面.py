@@ -119,7 +119,7 @@ if st.session_state.get("page") == "signup":
 
             st.success("🎉 報名成功！感謝您伸出援手 ❤️")
             st.session_state["page"] = "task_list"
-            st.experimental_rerun()
+            st.rerun()
 
     st.stop()
 
