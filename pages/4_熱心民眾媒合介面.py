@@ -97,11 +97,11 @@ if st.session_state.get("page") == "signup":
         # 🔥 取得報名的任務 ID
         task_id = st.session_state.get("selected_task_id")
 
+        # 更新 Google Sheet 上 selected_worker 數量 + 新增志工
         if task_id:
             # 找出任務目前 selected_worker 欄位所在 row
-            sheet.update_cell(task_idx[0] + 2, df.columns.get_loc("selected_worker") + 1,
-                  int(df.loc[task_idx, "selected_worker"].values[0]))
-
+            task_idx = df[df["id_number"] == task_id].index
+            df.loc[task_idx, "selected_worker"] += 1
 
             # 新增一筆志工資料到 Google Sheet
             new_row = [
@@ -114,12 +114,12 @@ if st.session_state.get("page") == "signup":
             ]
             sheet.append_row(new_row)
 
-            # 更新 Google Sheet 上 selected_worker 數量
+            # 把 updated 的 df 回寫回去（包含 selected_worker +1）
             update_sheet(df)
 
-            st.success("🎉 報名成功！感謝您伸出援手 ❤️")
-            st.session_state["page"] = "task_list"
-            st.rerun()
+        st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+        st.session_state["page"] = "task_list"
+        st.rerun()
 
     st.stop()
 
@@ -161,9 +161,6 @@ if keyword:
 st.write(f"共 {len(filtered)} 筆需求")
 st.markdown("---")
 
-# 初始化 session state
-if "accepted_task" not in st.session_state:
-    st.session_state.accepted_task = None
 
 # 取得目前志工身份驗證資訊（提前）
 vol_id = st.session_state.get("current_volunteer_id")
@@ -312,19 +309,6 @@ for idx, row in filtered.iterrows():
 # -------------------------------------------------
 # 接受任務後：更新 Google Sheet
 # -------------------------------------------------
-if st.session_state.accepted_task is not None:
-
-    task_id = st.session_state.accepted_task
-
-    # 📌 取得目前志工 Session（身份驗證）
-    vol_id = st.session_state.get("current_volunteer_id")
-    vol_name = st.session_state.get("current_volunteer_name")
-    vol_phone = st.session_state.get("current_volunteer_phone")
-    vol_line = st.session_state.get("current_volunteer_line")
-
-    if not vol_id:
-        st.error("⚠ 請先至「基本資料表單」填寫志工資料！")
-        st.stop()
 
     # 找出該任務
     target_row = df[df["id_number"] == task_id].iloc[0]
