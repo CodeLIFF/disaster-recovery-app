@@ -115,11 +115,27 @@ if st.session_state.get("page") == "signup":
             sheet.append_row(new_row)
 
             # 更新 Google Sheet 上 selected_worker 數量
-            update_sheet(df)
+            if task_id:
+                task_idx = df[df["id_number"] == task_id].index
+                df.loc[task_idx, "selected_worker"] += 1
+            
+                new_row = [
+                    "volunteer",
+                    task_id,
+                    name,
+                    phone,
+                    line_id,
+                    "", "", "", "", "", ""  
+                ]
+                sheet.append_row(new_row)
+            
+                # ⚠ 用 update_sheet，而不是 update_cell
+                update_sheet(df)  
+            
+                st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+                st.session_state["page"] = "task_list"
+                st.rerun()
 
-            st.success("🎉 報名成功！感謝您伸出援手 ❤️")
-            st.session_state["page"] = "task_list"
-            st.rerun()
 
     st.stop()
 
@@ -284,10 +300,69 @@ for idx, row in filtered.iterrows():
         elif already_joined:
             st.success("✔ 你已報名此任務")
         else:
-            if st.button("我要報名", key=f"apply_{row['id_number']}"):
-                st.session_state["page"] = "signup"  # 跳到填資料頁
-                st.session_state["selected_task_id"] = row["id_number"]  # 記住是報哪個任務
+            if st.button("送出報名"):
+                if not name or not phone:
+                    st.warning("請完整填寫姓名與電話")
+                    st.stop()
+            
+                st.session_state["current_volunteer_name"] = name
+                st.session_state["current_volunteer_phone"] = phone
+                st.session_state["current_volunteer_line"] = line_id
+            
+                task_id = st.session_state.get("selected_task_id")
+            
+                if not task_id:
+                    st.error("請先選擇任務")
+                    st.stop()
+            
+                # 找到目標任務的 index
+                task_idx = df[df["id_number"] == task_id].index
+            
+                if len(task_idx) == 0:
+                    st.error("找不到任務資料")
+                    st.stop()
+            
+                # 檢查是否已額滿
+                if int(df.loc[task_idx, "selected_worker"].values[0]) >= int(df.loc[task_idx, "demand_worker"].values[0]):
+                    st.warning("此任務名額已滿")
+                    st.rerun()
+                    st.stop()
+            
+                # 檢查志工是否已報名同任務
+                volunteers = df[df["role"] == "volunteer"]
+                exists = volunteers[
+                    (volunteers["phone"] == phone) &
+                    (volunteers["id_number"] == task_id)
+                ]
+            
+                if len(exists) > 0:
+                    st.warning("您已報名過此任務！")
+                    st.rerun()
+                    st.stop()
+            
+                # ⭐ 正常情況：新增報名資料
+                updated_selected = int(df.loc[task_idx, "selected_worker"].values[0]) + 1
+                df.loc[task_idx, "selected_worker"] = updated_selected
+            
+                # ✨只 append volunteer 資料，不覆寫整張 Sheet
+                new_row = [
+                    "volunteer",
+                    task_id,
+                    name,
+                    phone,
+                    line_id,
+                    "", "", "", "", "", ""
+                ]
+                sheet.append_row(new_row)
+            
+                # 將更新後的任務數據寫回 Google Sheet
+                sheet.update_cell(task_idx[0] + 2, df.columns.get_loc("selected_worker") + 1, updated_selected)
+            
+                st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+                st.session_state["page"] = "task_list"
                 st.rerun()
+                st.stop()
+
         
 
     with right:
