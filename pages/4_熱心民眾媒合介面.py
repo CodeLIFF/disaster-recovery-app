@@ -76,6 +76,28 @@ if "id_number" in df.columns:
 df["selected_worker"] = pd.to_numeric(df["selected_worker"], errors="coerce").fillna(0).astype(int)
 df["demand_worker"] = pd.to_numeric(df["demand_worker"], errors="coerce").fillna(0).astype(int)
 
+# === 志工基本資料填寫頁 ===
+if st.session_state.get("page") == "signup":
+    st.title("志工基本資料填寫")
+
+    name = st.text_input("姓名（必填）")
+    phone = st.text_input("電話（必填）")
+    line_id = st.text_input("LINE ID（選填）")
+
+    if st.button("送出報名"):
+        if not name or not phone:
+            st.warning("請完整填寫姓名與電話")
+            st.stop()
+
+        st.session_state["current_volunteer_name"] = name
+        st.session_state["current_volunteer_phone"] = phone
+        st.session_state["current_volunteer_line"] = line_id
+
+        st.session_state["page"] = "task_list"  # 回任務列表
+        st.experimental_rerun()
+
+    st.stop()
+
 # -----------------------------------
 # 過濾掉「只有註冊但未填需求」的人
 # -----------------------------------
@@ -249,8 +271,10 @@ for idx, row in filtered.iterrows():
             st.success("✔ 你已報名此任務")
         else:
             if st.button("我要報名", key=f"apply_{row['id_number']}"):
-                st.session_state.accepted_task = row["id_number"]
-                st.rerun()
+                st.session_state["page"] = "signup"  # 跳到填資料頁
+                st.session_state["selected_task_id"] = row["id_number"]  # 記住是報哪個任務
+                st.experimental_rerun()
+        
 
     with right:
         #if row["photo"]:
