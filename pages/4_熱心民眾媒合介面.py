@@ -257,9 +257,9 @@ for idx, row in filtered.iterrows():
         
                 # 台灣手機：09xxxxxxxx
                 if len(phone) == 10 and phone.startswith("09"):
-                    masked_phone = phone[:4] + "****" + phone[-2:]  # 09xx **** xx
+                    display_phone = phone[-3:]  # 僅顯示後三碼
                 else:
-                    masked_phone = "****"  # 避免例外狀況洩漏資訊
+                    display_phone = "???"
         
                 st.write(f"- {vol['name']}（{masked_phone}）")
         st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}", unsafe_allow_html=True)
