@@ -306,33 +306,3 @@ for idx, row in filtered.iterrows():
 
     st.markdown("---")
     
-# -------------------------------------------------
-# 接受任務後：更新 Google Sheet
-# -------------------------------------------------
-
-    # 找出該任務
-    target_row = df[df["id_number"] == task_id].iloc[0]
-
-    new_row = [
-        "volunteer",      # role
-        task_id,          # id_number
-        vol_name or "",
-        vol_phone or "",
-        vol_line or "",
-    ]
-    
-    # 填滿所有欄位：避免欄位往右錯位
-    while len(new_row) < len(df.columns):
-        new_row.append("")
-    
-    sheet.append_row(new_row)
-    
-    # 🔄 reset & refresh
-    st.session_state.accepted_task = None
-    st.rerun()
-    
-    sheet.append_row(new_row)
-    
-    # 🔄 reset & refresh
-    st.session_state.accepted_task = None
-    st.rerun()
