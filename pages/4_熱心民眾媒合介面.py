@@ -102,9 +102,22 @@ if st.session_state.get("page") == "signup":
         task_id = st.session_state.get("selected_task_id")
         
         if task_id:
+
+            # 在寫入前再次確認沒有重複報名
+            already_joined = len(df[
+                (df["phone"] == phone) &
+                (df["id_number"] == task_id)
+            ]) > 0
+        
+            if already_joined:
+                st.error("⚠ 您已報名過此任務，請勿重複報名 🙏")
+                st.stop()
+        
+            # 找出任務目前 selected_worker 欄位所在 row
             task_idx = df[df["id_number"] == task_id].index
             df.loc[task_idx, "selected_worker"] += 1
-    
+        
+            # 新增一筆志工資料到 Google Sheet
             new_row = [
                 task_id,
                 "volunteer",
@@ -114,7 +127,7 @@ if st.session_state.get("page") == "signup":
                 "", "", "", "", "", ""
             ]
             sheet.append_row(new_row)
-    
+        
         st.success("🎉 報名成功！感謝您伸出援手 ❤️")
         st.session_state["page"] = "task_list"
         st.rerun()
