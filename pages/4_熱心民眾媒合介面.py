@@ -261,7 +261,7 @@ for idx, row in filtered.iterrows():
                 else:
                     display_phone = "???"
         
-                st.write(f"- {vol['name']}（{masked_phone}）")
+                st.write(f"- {vol['name']}（{display_phone}）")
         st.markdown(f"**🧰 提供資源：** {translate_list(row['resources'])}", unsafe_allow_html=True)
         st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
         st.markdown(f"**💪 能力需求：** {translate_list(row['skills'])}", unsafe_allow_html=True)
