@@ -105,25 +105,37 @@ if st.session_state.get("page") == "signup":
         task_id = st.session_state.get("selected_task_id")
         
         if task_id:
+            # 🔁 重新讀取最新 Google Sheet，避免使用舊的 volunteers snapshot
+            latest = sheet.get_all_records()
+            df_latest = pd.DataFrame(latest)
+            df_latest.columns = df_latest.columns.str.strip()
 
-            # 在寫入前再次確認沒有重複報名
-            already_joined = len(volunteers[
-                (volunteers["phone"] == phone) &
-                (volunteers["id_number"] == task_id)
-            ]) > 0
-            
-            if already_joined:
+            # 欄位型態處理
+            if "id_number" in df_latest.columns:
+                df_latest["id_number"] = pd.to_numeric(
+                    df_latest["id_number"], errors="coerce"
+                ).fillna(0).astype(int)
+            if "phone" in df_latest.columns:
+                df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+
+            # ⚠ 再次確認沒有重複報名（同一支手機 + 同一任務）
+            dup = df_latest[
+                (df_latest["role"] == "volunteer") &
+                (df_latest["id_number"] == task_id) &
+                (df_latest["phone"] == phone)
+            ]
+
+            if not dup.empty:
                 st.error("⚠ 您已報名過此任務，請勿重複報名 🙏")
                 st.stop()
-        
-            # 找出任務目前 selected_worker 欄位所在 row
+
+            # ✅ 沒重複才寫入 & 更新人數
             task_idx = df[df["id_number"] == task_id].index
             df.loc[task_idx, "selected_worker"] += 1
-        
-            # 新增一筆志工資料到 Google Sheet
+
             new_row = [
-                task_id,
-                "volunteer",
+                task_id,       # id_number
+                "volunteer",   # role
                 name,
                 phone,
                 line_id,
