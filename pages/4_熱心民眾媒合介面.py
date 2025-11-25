@@ -85,38 +85,40 @@ if st.session_state.get("page") == "signup":
     line_id = st.text_input("LINE ID（選填）")
 
     if st.button("送出報名"):
+
         if not name or not phone:
             st.warning("請完整填寫姓名與電話")
             st.stop()
-
-        # 記錄志工資料到 session
+    
+        # 📌 台灣手機號碼驗證
+        if not (phone.isdigit() and len(phone) == 10 and phone.startswith("09")):
+            st.error("⚠ 請輸入有效的台灣手機號碼（必須為 09 開頭且共 10 碼）")
+            st.stop()
+    
         st.session_state["current_volunteer_name"] = name
         st.session_state["current_volunteer_phone"] = phone
         st.session_state["current_volunteer_line"] = line_id
-
-        # 🔥 取得報名的任務 ID
+    
         task_id = st.session_state.get("selected_task_id")
-
-        # 更新 Google Sheet 上 selected_worker 數量 + 新增志工
+        
         if task_id:
-            # 找出任務目前 selected_worker 欄位所在 row
             task_idx = df[df["id_number"] == task_id].index
             df.loc[task_idx, "selected_worker"] += 1
-
-            # 新增一筆志工資料到 Google Sheet
+    
             new_row = [
-                task_id,
                 "volunteer",
+                task_id,
                 name,
                 phone,
                 line_id,
-                "", "", "", "", "", ""  # 填滿以避免欄位錯位
+                "", "", "", "", "", ""
             ]
             sheet.append_row(new_row)
-
+    
         st.success("🎉 報名成功！感謝您伸出援手 ❤️")
         st.session_state["page"] = "task_list"
-        st.rerun()        
+        st.rerun()
+    
     st.stop()
 
 
