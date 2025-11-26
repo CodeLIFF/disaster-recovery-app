@@ -14,7 +14,7 @@ st.write("Service Account:", creds.service_account_email)
 
 # ---------- Google Drive ----------
 drive_service = build("drive", "v3", credentials=creds)
-DRIVE_PHOTO_FOLDER_ID = "15BiA4lXDXvEPG7fX_GKIhjzhlLdaLiT8"
+DRIVE_PHOTO_FOLDER_ID = "14DRCyzFrQ4ArxZWcrwnEyXPP-BHxclyB"
 
 # ---------- 測試資料夾上傳權限 ----------
 def check_drive_upload_permission(folder_id):
