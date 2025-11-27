@@ -447,7 +447,7 @@ if st.button("✅ 送出今日受災需求 submit"):
         st.stop()
     elif uploaded_photo is not None:
         # 使用者有上傳新的照片 → 上傳到 Google Drive，取得網址
-        photo_to_save = upload_photo_to_drive(uploaded_photo)
+        photo_to_save = upload_photo_to_supabase(uploaded_photo)
         if not photo_to_save:
             st.error("❌ 照片上傳失敗，請稍後再試。")
             st.stop()
