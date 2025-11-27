@@ -6,6 +6,8 @@ import re
 import io
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
+from supabase import create_client, Client
+
 
 # ---------- Google Service Account：一組搞定 ----------
 creds = Credentials.from_service_account_info(
@@ -21,40 +23,42 @@ gc = gspread.authorize(creds)
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
 ws = gc.open_by_key(SHEET_ID).worksheet("vol")
 
-# Google Drive
-drive_service = build("drive", "v3", credentials=creds)
-DRIVE_PHOTO_FOLDER_ID = "15BiA4lXDXvEPG7fX_GKIhjzhlLdaLiT8"
+# .streamlit/secrets.toml
+[supabase]
+url = "https://zktsrpccikfnsqkpuxcc.supabase.co"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprdHNycGNjaWtmbnNxa3B1eGNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDM1NTAsImV4cCI6MjA3OTgxOTU1MH0.x0h5R5KfmzfCZ8WALDAeEPU36WGgE0Ri-N1JGY6VCcM"
+bucket = "photos"
+supabase: Client = create_client(supabase_url, supabase_key)
 
 
 
 
-def upload_photo_to_drive(uploaded_file):
+def upload_photo_to_supabase(uploaded_file):
     if uploaded_file is None:
         return None
 
-    uploaded_file.seek(0)
-    file_bytes = uploaded_file.read()
-    file_stream = io.BytesIO(file_bytes)
+    file_bytes = uploaded_file.getvalue()
 
-    media = MediaIoBaseUpload(
-        file_stream,
-        mimetype=uploaded_file.type,
-        resumable=False,
-    )
+    # 將檔名改成不會重複：user_時間戳_原檔名
+    import time
+    filename = f"{int(time.time())}_{uploaded_file.name}"
 
-    file_metadata = {
-        "name": uploaded_file.name,
-        "parents": [DRIVE_PHOTO_FOLDER_ID],
-    }
+    try:
+        # 上傳到 Supabase bucket
+        supabase.storage.from_(supabase_bucket).upload(
+            path=filename,
+            file=file_bytes,
+            file_options={"content-type": uploaded_file.type}
+        )
+    except Exception as e:
+        st.error("Supabase 上傳失敗")
+        st.error(str(e))
+        return None
 
-    drive_file = drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id",
-    ).execute()
+    # 取得公開 URL（前提：你的 bucket 要設成 public）
+    url = supabase.storage.from_(supabase_bucket).get_public_url(filename)
+    return url
 
-    file_id = drive_file["id"]
-    return f"https://drive.google.com/uc?id={file_id}"
 
 
 
