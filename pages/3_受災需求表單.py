@@ -37,7 +37,7 @@ def upload_photo_to_supabase(uploaded_file):
         return None
         
     row_number, row_series = find_victim_row(name, phone)
-    user_id = row_series.get("id")  
+    user_id = row_series.get("id_number")  
 
     file_ext = uploaded_file.name.split('.')[-1]
     filename = f"{user_id}.{file_ext}"
