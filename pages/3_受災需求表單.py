@@ -248,7 +248,9 @@ for t in tr_tokens:
 
 # ----- mission_name / photo / note 預設 -----
 prev_mission = normalize_text(prev.get("mission_name", ""))
-prev_photo = normalize_text(prev.get("photo", ""))
+
+prev_photo = prev.get("photo", "")
+
 prev_note = str(prev.get("note", "") or "")
 
 # ================== 第三步：填寫／更新詳細需求 ================== #
