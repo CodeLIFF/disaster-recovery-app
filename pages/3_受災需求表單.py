@@ -35,12 +35,13 @@ supabase: Client = create_client(supabase_url, supabase_key)
 def upload_photo_to_supabase(uploaded_file):
     if uploaded_file is None:
         return None
+        
+    row_number, row_series = find_victim_row(name, phone)
+    user_id = row_series.get("id")  
 
+    file_ext = uploaded_file.name.split('.')[-1]
+    filename = f"{user_id}.{file_ext}"
     file_bytes = uploaded_file.getvalue()
-
-    # 將檔名改成不會重複：user_時間戳_原檔名
-    import time
-    filename = f"{int(time.time())}_{uploaded_file.name}"
 
     try:
         # 上傳到 Supabase bucket
