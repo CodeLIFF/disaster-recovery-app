@@ -23,8 +23,7 @@ gc = gspread.authorize(creds)
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
 ws = gc.open_by_key(SHEET_ID).worksheet("vol")
 
-# .streamlit/secrets.toml
-[supabase]
+
 url = "https://zktsrpccikfnsqkpuxcc.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprdHNycGNjaWtmbnNxa3B1eGNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDM1NTAsImV4cCI6MjA3OTgxOTU1MH0.x0h5R5KfmzfCZ8WALDAeEPU36WGgE0Ri-N1JGY6VCcM"
 bucket = "photos"
