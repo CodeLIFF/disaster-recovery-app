@@ -509,7 +509,7 @@ if st.button("✅ 送出今日受災需求 submit"):
     new_row = [row.get(col, "") for col in ordered_cols]
 
     try:
-        ws.update(f"A{row_number}:O{row_number}", [new_row])
+        ws.update(f"A{row_number}:P{row_number}", [new_row])
         st.success("✅ 已成功更新您『今天』的受災需求資料！")
         st.info("若明天需求有變化，可以再次進入本表單，只需調整有改變的項目即可。")
     except Exception as e:
