@@ -49,8 +49,8 @@ def upload_photo_to_supabase(uploaded_file):
             path=filename,
             file=file_bytes,
             file_options={
-                "content-type": uploaded_file.type
-                   
+                "content-type": uploaded_file.type,
+                "upsert": "true"
             }
         )
     except Exception as e:
