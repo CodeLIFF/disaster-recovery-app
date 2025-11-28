@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 import pandas as pd
 import gspread
@@ -35,30 +36,32 @@ supabase: Client = create_client(supabase_url, supabase_key)
 def upload_photo_to_supabase(uploaded_file):
     if uploaded_file is None:
         return None
-        
-    row_number, row_series = find_victim_row(name, phone)
-    user_id = row_series.get("id_number")  
 
+    row_number, row_series = find_victim_row(name, phone)
+    user_id = row_series.get("id_number")
+
+    
     file_ext = uploaded_file.name.split('.')[-1]
-    filename = f"{user_id}.{file_ext}"
+
+    
+    timestamp = int(time.time())  
+    filename = f"{user_id}_{timestamp}.{file_ext}"
+
     file_bytes = uploaded_file.getvalue()
 
     try:
-        # 上傳到 Supabase bucket
+        
         supabase.storage.from_(supabase_bucket).upload(
             path=filename,
             file=file_bytes,
-            file_options={
-                "content-type": uploaded_file.type,
-                "upsert": "true"
-            }
+            file_options={"content-type": uploaded_file.type}
         )
     except Exception as e:
         st.error("Supabase 上傳失敗")
         st.error(str(e))
         return None
 
-    # 取得公開 URL（前提：你的 bucket 要設成 public）
+ 
     url = supabase.storage.from_(supabase_bucket).get_public_url(filename)
     return url
 
