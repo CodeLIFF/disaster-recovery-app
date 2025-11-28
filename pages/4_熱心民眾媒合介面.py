@@ -334,33 +334,28 @@ for idx, row in filtered.iterrows():
         
         conflict = any(slot in existing_slots for slot in new_slots)
         
-        # ---- 按鈕行為 ----
-        if current_count >= row["demand_worker"]:
+       # ---- 按鈕行為 ----
+
+        # 志工限制：已報名任何任務 → 全站禁報
+        if already_joined_global:
+            st.error("⚠ 您已完成一項任務報名，請勿重複 🙏")
+        
+        elif current_count >= row["demand_worker"]:
             st.error("❌ 此任務人數已足夠")
         
         elif already_joined_same:
             st.success("✔ 你已報名此任務")
         
-        elif already_joined_global:
-            st.warning("⚠ 您已完成任務報名，請勿重複 🙏")
-        
         elif conflict:
             st.warning("⚠ 工作時段衝突！請選擇其他時段的任務 🙏")
         
         else:
-            if vol_phone:  # 📌 正式登入後才擋規則
-                if st.button("我要報名", key=f"apply_{row['id_number']}"):
-                    st.session_state["page"] = "signup"
-                    st.session_state["selected_task_id"] = row["id_number"]
-                    st.rerun()
-            else:
-                # 📌 未填志工資料 → 不擋 → 讓他先填資料
-                if st.button("開始報名", key=f"reg_{row['id_number']}"):
-                    st.session_state["page"] = "signup"
-                    st.session_state["selected_task_id"] = row["id_number"]
-                    st.rerun()
-
-
+            # 未填資料 → 強制導向填資料頁
+            if st.button("我要報名", key=f"apply_{row['id_number']}"):
+                st.session_state["page"] = "signup"
+                st.session_state["selected_task_id"] = row["id_number"]
+                st.rerun()
+        
     with right:
         #if row["photo"]:
             #st.image(row["photo"], use_column_width=True)
