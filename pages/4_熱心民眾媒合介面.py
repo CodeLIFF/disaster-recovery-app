@@ -341,6 +341,9 @@ for idx, row in filtered.iterrows():
         elif already_joined_same:
             st.success("✔ 你已報名此任務")
         
+        elif already_joined_global:
+            st.warning("⚠ 您已完成任務報名，請勿重複 🙏")
+        
         elif conflict:
             st.warning("⚠ 工作時段衝突！請選擇其他時段的任務 🙏")
         
@@ -349,6 +352,7 @@ for idx, row in filtered.iterrows():
                 st.session_state["page"] = "signup"
                 st.session_state["selected_task_id"] = row["id_number"]
                 st.rerun()
+
 
     with right:
         #if row["photo"]:
