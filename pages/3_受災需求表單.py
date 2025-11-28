@@ -499,6 +499,7 @@ if st.button("✅ 送出今日受災需求 submit"):
         "work_time",
         "demand_worker",
         "selected_worker",
+        "accepted_volunteers",
         "resources",
         "skills",
         "photo",
