@@ -82,19 +82,6 @@ def translate_list(text):
 # === 全域：讀取志工身分 ===
 vol_phone = st.session_state.get("current_volunteer_phone", "").strip()
 
-# 若已有手機號 → 代表已報名
-if vol_phone:
-    df_latest = pd.DataFrame(sheet.get_all_records())
-    df_latest.columns = df_latest.columns.str.strip()
-    df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
-
-    already_joined_global = len(df_latest[
-        (df_latest["role"] == "volunteer") &
-        (df_latest["phone"] == vol_phone)
-    ]) > 0
-else:
-    already_joined_global = False
-
 # === 志工基本資料填寫頁 ===
 if st.session_state.get("page") == "signup":
     st.title("志工基本資料填寫")
@@ -282,6 +269,20 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 # -----------------------------------
 # 卡片列表
 # -----------------------------------
+
+# 若已有手機號 → 代表已報名
+if vol_phone:
+    df_latest = pd.DataFrame(sheet.get_all_records())
+    df_latest.columns = df_latest.columns.str.strip()
+    df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+
+    already_joined_global = len(df_latest[
+        (df_latest["role"] == "volunteer") &
+        (df_latest["phone"] == vol_phone)
+    ]) > 0
+else:
+    already_joined_global = False
+
 for idx, row in filtered.iterrows():
     left, right = st.columns([2, 1])
 
