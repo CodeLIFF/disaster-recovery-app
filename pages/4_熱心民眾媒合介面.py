@@ -74,13 +74,26 @@ def t(value):
         return f"{translate[value]} ({value})"
     return value
 
+def get_latest_phone():
+    latest = sheet.get_all_records()
+    df_latest = pd.DataFrame(latest)
+    df_latest.columns = df_latest.columns.str.strip()
+    df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+
+    # 取最後一筆 volunteer
+    vol_rows = df_latest[df_latest["role"] == "volunteer"]
+    if len(vol_rows) > 0:
+        return vol_rows.iloc[-1]["phone"]
+
+    return ""
+
 def translate_list(text):
     parts = [p.strip() for p in text.split(",")]
     translated = [t(p) for p in parts if p]
     return "、".join(translated)
 
 # === 全域：讀取志工身分 ===
-vol_phone = st.session_state.get("current_volunteer_phone", "").strip()
+vol_phone = get_latest_phone()
 
 # === 志工基本資料填寫頁 ===
 if st.session_state.get("page") == "signup":
