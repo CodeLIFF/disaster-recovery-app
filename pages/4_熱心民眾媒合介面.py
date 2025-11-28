@@ -109,60 +109,53 @@ if st.session_state.get("page") == "signup":
             st.warning("請完整填寫姓名與電話")
             st.stop()
     
-        # 📌 台灣手機號碼驗證
         if not (phone.isdigit() and len(phone) == 10 and phone.startswith("09")):
-            st.error("⚠ 請輸入有效的台灣手機號碼（必須為 09 開頭且共 10 碼）")
+            st.error("⚠ 請輸入有效台灣手機號碼（09開頭 10碼）")
             st.stop()
     
-        st.session_state["current_volunteer_name"] = name
-        st.session_state["current_volunteer_phone"] = phone
-        st.session_state["current_volunteer_line"] = line_id
+        # 重新讀取最新資料
+        latest = sheet.get_all_records()
+        df_latest = pd.DataFrame(latest)
+        df_latest.columns = df_latest.columns.str.strip()
+        df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+        df_latest["id_number"] = pd.to_numeric(df_latest["id_number"], errors="coerce").fillna(0).astype(int)
+    
+        # ⚠ 每位志工限報一次
+        if len(df_latest[(df_latest["role"] == "volunteer") & (df_latest["phone"] == phone)]) > 0:
+            st.error("⚠ 此手機已報名過，請勿重複 🙏")
+            st.stop()
     
         task_id = st.session_state.get("selected_task_id")
-        
-        if task_id:
-            # 再次讀最新資料，避免用到舊 volunteers
-            latest = sheet.get_all_records()
-            df_latest = pd.DataFrame(latest)
-            df_latest.columns = df_latest.columns.str.strip()
-        
-            # 數值欄位處理
-            if "id_number" in df_latest.columns:
-                df_latest["id_number"] = pd.to_numeric(
-                    df_latest["id_number"], errors="coerce"
-                ).fillna(0).astype(int)
-            df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
-        
-            # ⚠ 限制每位志工限報一項
-            if len(df_latest[df_latest["phone"] == phone]) > 0:
-                st.error("⚠ 每位志工限報一項任務，請勿重複報名 🙏")
-                st.stop()
-        
-            # 找到該任務所屬 Row
-            task_idx = df_latest[df_latest["id_number"] == task_id].index
-            if len(task_idx) == 0:
-                st.error("找不到任務資料，請重新整理再試一次")
-                st.stop()
-            task_idx = task_idx[0]
-        
-            # 更新 selected_worker
-            new_count = int(df_latest.loc[task_idx, "selected_worker"]) + 1
-            col = df_latest.columns.get_loc("selected_worker") + 1
-            sheet.update_cell(task_idx + 2, col, new_count)  # Google Sheet row offset +2
-        
-            # 新增志工資料
-            sheet.append_row([
-                task_id,
-                "volunteer",
-                name,
-                phone,
-                line_id,
-                "", "", "", "", "", ""
-            ])
-        
-        st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+        if not task_id:
+            st.error("⚠ 請重新選擇任務")
+            st.stop()
+    
+        # 找任務 row
+        mission_idx = df_latest[df_latest["id_number"] == task_id].index
+        if len(mission_idx) == 0:
+            st.error("⚠ 找不到任務，請重新整理")
+            st.stop()
+        mission_idx = mission_idx[0]
+    
+        # 人數 +1 回寫 Google Sheet
+        new_count = int(df_latest.loc[mission_idx, "selected_worker"]) + 1
+        col = df_latest.columns.get_loc("selected_worker") + 1
+        sheet.update_cell(mission_idx + 2, col, new_count)
+    
+        # 寫入志工報名
+        sheet.append_row([
+            task_id,
+            "volunteer",
+            name,
+            phone,
+            line_id,
+            "", "", "", "", "", ""
+        ])
+    
+        st.success("🎉 報名成功！")
         st.session_state["page"] = "task_list"
         st.rerun()
+
     
     st.stop()
 
