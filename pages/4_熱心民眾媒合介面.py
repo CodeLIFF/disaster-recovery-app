@@ -284,6 +284,7 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 # -----------------------------------
 
 # 若已有手機號 → 代表已報名
+
 if vol_phone:
     df_latest = pd.DataFrame(sheet.get_all_records())
     df_latest.columns = df_latest.columns.str.strip()
@@ -300,6 +301,20 @@ for idx, row in filtered.iterrows():
     left, right = st.columns([2, 1])
 
     with left:
+
+        # 每次顯示卡片前，都用 Google Sheet 檢查手機是否存在
+        latest = sheet.get_all_records()
+        df_latest = pd.DataFrame(latest)
+        df_latest.columns = df_latest.columns.str.strip()
+        df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+        
+        already_joined_global = False
+        if vol_phone:
+            already_joined_global = len(df_latest[
+                (df_latest["role"] == "volunteer") &
+                (df_latest["phone"] == vol_phone)
+            ]) > 0
+
         st.markdown(f"**🕒 工作時間：** {translate_list(row['work_time'])}", unsafe_allow_html=True)
         st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
         # 重新讀取資料，取得最新人數
