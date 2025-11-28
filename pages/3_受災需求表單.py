@@ -48,7 +48,10 @@ def upload_photo_to_supabase(uploaded_file):
         supabase.storage.from_(supabase_bucket).upload(
             path=filename,
             file=file_bytes,
-            file_options={"content-type": uploaded_file.type}
+            file_options={
+                "content-type": uploaded_file.type,
+                "upsert": "true"    
+            }
         )
     except Exception as e:
         st.error("Supabase 上傳失敗")
