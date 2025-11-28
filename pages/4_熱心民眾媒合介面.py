@@ -79,6 +79,22 @@ def translate_list(text):
     translated = [t(p) for p in parts if p]
     return "、".join(translated)
 
+# === 全域：讀取志工身分 ===
+vol_phone = st.session_state.get("current_volunteer_phone", "").strip()
+
+# 若已有手機號 → 代表已報名
+if vol_phone:
+    df_latest = pd.DataFrame(sheet.get_all_records())
+    df_latest.columns = df_latest.columns.str.strip()
+    df_latest["phone"] = df_latest["phone"].fillna("").astype(str).str.strip()
+
+    already_joined_global = len(df_latest[
+        (df_latest["role"] == "volunteer") &
+        (df_latest["phone"] == vol_phone)
+    ]) > 0
+else:
+    already_joined_global = False
+
 # === 志工基本資料填寫頁 ===
 if st.session_state.get("page") == "signup":
     st.title("志工基本資料填寫")
@@ -306,11 +322,7 @@ for idx, row in filtered.iterrows():
         st.markdown(f"**📝 備註：** {row['note']}")
 
         vol_id = st.session_state.get("current_volunteer_id", "")
-        vol_phone = st.session_state.get("current_volunteer_phone", "")
-        already_joined_global = len(df_latest[
-            (df_latest["role"] == "volunteer") &
-            (df_latest["phone"] == vol_phone)
-        ]) > 0
+        
         
        # 志工是否已報名此任務
         already_joined_same = len(df_latest[
@@ -339,7 +351,8 @@ for idx, row in filtered.iterrows():
         # 志工限制：已報名任何任務 → 全站禁報
         if already_joined_global:
             st.error("⚠ 您已完成一項任務報名，請勿重複 🙏")
-        
+            continue
+            
         elif current_count >= row["demand_worker"]:
             st.error("❌ 此任務人數已足夠")
         
