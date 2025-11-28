@@ -348,10 +348,17 @@ for idx, row in filtered.iterrows():
             st.warning("⚠ 工作時段衝突！請選擇其他時段的任務 🙏")
         
         else:
-            if st.button("我要報名", key=f"apply_{row['id_number']}"):
-                st.session_state["page"] = "signup"
-                st.session_state["selected_task_id"] = row["id_number"]
-                st.rerun()
+            if vol_phone:  # 📌 正式登入後才擋規則
+                if st.button("我要報名", key=f"apply_{row['id_number']}"):
+                    st.session_state["page"] = "signup"
+                    st.session_state["selected_task_id"] = row["id_number"]
+                    st.rerun()
+            else:
+                # 📌 未填志工資料 → 不擋 → 讓他先填資料
+                if st.button("開始報名", key=f"reg_{row['id_number']}"):
+                    st.session_state["page"] = "signup"
+                    st.session_state["selected_task_id"] = row["id_number"]
+                    st.rerun()
 
 
     with right:
