@@ -378,30 +378,21 @@ for idx, row in filtered.iterrows():
        # ---- 按鈕行為 ----
 
         # ⚠ 如果手機已經存在於任何 volunteer → 全面禁報
-        if vol_phone and already_joined_global:
-            st.warning("⚠ 您已完成一項任務報名，請勿重複 🙏")
-            continue
 
+        if already_joined_same:
+            st.success("✔ 你已報名此任務")
+        
         elif current_count >= row["demand_worker"]:
             st.error("❌ 此任務人數已足夠")
-        
-        elif already_joined_same:
-            st.success("✔ 你已報名此任務")
         
         elif conflict:
             st.warning("⚠ 工作時段衝突！請選擇其他時段的任務 🙏")
         
         else:
-            # 未填資料 → 強制導向填資料頁
             if st.button("我要報名", key=f"apply_{row['id_number']}"):
                 st.session_state["page"] = "signup"
                 st.session_state["selected_task_id"] = row["id_number"]
                 st.rerun()
-        if not vol_phone:
-            # 嘗試找最近 append 的志工
-            if not volunteers.empty:
-                vol_phone = volunteers.iloc[-1]["phone"].strip()
-                st.session_state["current_volunteer_phone"] = vol_phone
 
 
     with right:
