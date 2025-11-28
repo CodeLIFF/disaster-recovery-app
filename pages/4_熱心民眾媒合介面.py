@@ -124,7 +124,7 @@ if st.session_state.get("page") == "signup":
         submitted = st.form_submit_button("確認送出")
 
     if submitted:
-        # 1. 基礎格式驗證
+        # --- 1. 基礎格式驗證 ---
         if not name or not phone:
             st.warning("❌ 請完整填寫姓名與電話")
             st.stop()
@@ -134,57 +134,52 @@ if st.session_state.get("page") == "signup":
             
         task_id = st.session_state.get("selected_task_id")
         
-        # ========================================================
-        # 🔥【關鍵修正】寫入前的「強制即時檢查」
-        # ========================================================
+        # --- 2. 定義手機號碼標準化函式 (讀取用) ---
+        def normalize_phone(p):
+            p = str(p).strip()
+            # 如果是 9 開頭且長度為 9 (代表 0 被 Google 吃掉了)，補回 0
+            if len(p) == 9 and p.startswith("9"):
+                return "0" + p
+            return p
+
+        # --- 3. 強制即時檢查 (讀取 + 標準化) ---
+        load_data.clear()  # 清除快取
+        df_fresh = load_data() # 重新抓最新資料
         
-        # 1. 先清除快取，確保等一下讀到的是 Google Sheet 上最新的一刻
-        load_data.clear()
-        
-        # 2. 重新抓取資料 (這時候會真的去連 Google API)
-        df_fresh = load_data()
-        
-        # 3. 檢查「這支電話」是否已經在「這個任務」的報名名單裡？
-        #    注意：這裡要檢查 df_fresh (最新的)，不是外面的 df (舊的)
-        
-        # 篩選出目前的志工資料
         if not df_fresh.empty and "role" in df_fresh.columns:
+            # 針對讀回來的資料，先做一次「補 0」動作，確保格式一致
+            df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
+            
             vols_fresh = df_fresh[df_fresh["role"] == "volunteer"]
             
-            # 檢查是否重複報名此任務
-            already_exists = not vols_fresh[
+            # 檢查是否已報名此任務 (現在格式統一了，比對就會準確)
+            is_duplicate = not vols_fresh[
                 (vols_fresh["phone"] == phone) & 
                 (vols_fresh["id_number"] == int(task_id))
             ].empty
             
-            if already_exists:
+            if is_duplicate:
                 st.error("❌ 您已經報名過此任務，請勿重複提交！")
-                if st.button("返回列表", key="back_btn_duplicate"):
+                if st.button("返回列表", key="dup_back"):
                     st.session_state["page"] = "task_list"
                     st.rerun()
                 st.stop()
-                
-            # (選用) 檢查是否已報名其他任務 (全域一人限一項)
-            # global_exists = not vols_fresh[vols_fresh["phone"] == phone].empty
-            # if global_exists:
-            #     st.error("❌ 您已報名其他任務，每人限報名一項！")
-            #     st.stop()
 
-        # ========================================================
-        # 4. 通過檢查，執行寫入
-        # ========================================================
+        # --- 4. 寫入資料 (強制保留 0) ---
         try:
+            # 【關鍵修改】在 phone 前面加上 "'" (單引號)
+            # 這會告訴 Google Sheets：「這是文字，不要把它變成數字！」
+            phone_to_write = "'" + phone 
+            
             row_data = [
-                int(task_id), "volunteer", name, phone, line_id, 
+                int(task_id), "volunteer", name, phone_to_write, line_id, 
                 "", "", "", "", "", "", "" 
             ]
             sheet.append_row(row_data)
             
-            # 更新 Session 讓前端按鈕鎖住
+            # 更新 Session
             st.session_state["user_phone"] = phone
             st.session_state["my_new_tasks"].append(task_id)
-            
-            # 再次清除快取，確保回到列表頁時看到的是新的
             load_data.clear()
             
             st.success("🎉 報名成功！")
@@ -192,9 +187,8 @@ if st.session_state.get("page") == "signup":
             st.rerun()
             
         except Exception as e:
-            st.error(f"連線錯誤，請稍後再試: {e}")
+            st.error(f"連線錯誤: {e}")
             st.stop()
-
     if st.button("取消返回"):
         st.session_state["page"] = "task_list"
         st.rerun()
