@@ -70,7 +70,7 @@ def load_data():
 # 輔助函式：翻譯與標籤顯示
 translate = {
     "morning": "早上", "noon": "中午", "afternoon": "下午", "night": "晚上",
-    "tools": "工具", "food": "食物", "water": "飲用水",
+    "tool": "工具", "food": "食物", "water": "飲用水",
     "hygiene supplies": "清潔用品", "cleaning": "清潔",
     "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車",
 }
@@ -93,9 +93,9 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 
 # UI 顯示字典
 time_display = {"morning": "🌅 早上 (08-11)", "noon": "🌞 中午 (11-13)", "afternoon": "🌇 下午 (13-17)", "night": "🌃 晚上 (17-19)"}
-skills_display = {"supplies distribution": "📦 物資", "cleaning": "🧹 清掃", "medical": "🩺 醫療", "heavy lifting": "🏋️ 搬運", "driver's license": "🚗 駕照", "other skills": "✨ 其他"}
-resources_display = {"tools": "🛠 工具", "food": "🍱 食物", "water": "🚰 水", "medical supplies": "💊 醫療", "hygiene supplies": "🧻 衛生", "accommodation": "🏠 住宿", "other resources": "➕ 其他"}
-transport_display = {"train": "🚆 火車", "bus": "🚌 巴士", "walk": "🚶 步行", "car": "🚗 開車", "scooter": "🛵 機車", "bike": "🚲 單車", "other transportation": "➕ 其他"}
+skills_display = {"supplies distribution": "📦 物資", "cleaning": "🧹 清掃", "medical": "🩺 醫療", "heavy lifting": "🏋️ 搬運", "driver's license": "🚗 駕照", "other": "✨ 其他"}
+resources_display = {"tool": "🛠 工具", "food": "🍱 食物", "water": "🚰 水", "medical supplies": "💊 醫療", "hygiene supplies": "🧻 衛生", "accommodation": "🏠 住宿", "other": "➕ 其他"}
+transport_display = {"train": "🚆 火車", "bus": "🚌 巴士", "walk": "🚶 步行", "car": "🚗 開車", "scooter": "🛵 機車", "bike": "🚲 單車", "other": "➕ 其他"}
 
 # ==========================================
 # 3. 程式主流程
