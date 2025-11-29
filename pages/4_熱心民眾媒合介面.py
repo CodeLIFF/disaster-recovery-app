@@ -57,7 +57,7 @@ def load_data():
         
         # 轉型文字欄位
         text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
-                       "skills", "resources", "transport", "note", "photo", "role", "name","other"]
+                       "skills", "resources", "transport", "note", "photo", "role", "name", "other"]
         for col in text_fields:
             if col in df.columns:
                 df[col] = df[col].fillna("").astype(str).str.strip()
@@ -72,7 +72,7 @@ translate = {
     "morning": "早上", "noon": "中午", "afternoon": "下午", "night": "晚上",
     "tool": "工具", "food": "食物", "water": "飲用水",
     "hygiene supplies": "清潔用品", "cleaning": "清潔",
-    "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車","other": "其他"
+    "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車", "other": "其他"
 }
 def t(value):
     value = str(value).strip()
@@ -91,11 +91,39 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
         labels.append(html)
     return "".join(labels)
 
-# UI 顯示字典
-time_display = {"morning": "🌅 早上 (08-11)", "noon": "🌞 中午 (11-13)", "afternoon": "🌇 下午 (13-17)", "night": "🌃 晚上 (17-19)"}
-skills_display = {"supplies distribution": "📦 物資", "cleaning": "🧹 清掃", "medical": "🩺 醫療", "heavy lifting": "🏋️ 搬運", "driver's license": "🚗 駕照", "other": "✨ 其��[...]
-resources_display = {"tool": "🛠 工具", "food": "🍱 食物", "water": "🚰 水", "medical supplies": "💊 醫療", "hygiene supplies": "🧻 衛生", "accommodation": "🏠 住宿", "other": "[...]
-transport_display = {"train": "🚆 火車", "bus": "🚌 巴士", "walk": "🚶 步行", "car": "🚗 開車", "scooter": "🛵 機車", "bike": "🚲 單車", "other": "➕ 其他"}
+# UI 顯示字典（已修正為完整合法的 dict，不會被截斷）
+time_display = {
+    "morning": "🌅 早上 (08-11)",
+    "noon": "🌞 中午 (11-13)",
+    "afternoon": "🌇 下午 (13-17)",
+    "night": "🌃 晚上 (17-19)"
+}
+skills_display = {
+    "supplies distribution": "📦 物資",
+    "cleaning": "🧹 清掃",
+    "medical": "🩺 醫療",
+    "heavy lifting": "🏋️ 搬運",
+    "driver's license": "🚗 駕照",
+    "other": "✨ 其他"
+}
+resources_display = {
+    "tool": "🛠 工具",
+    "food": "🍱 食物",
+    "water": "🚰 飲用水",
+    "medical supplies": "💊 醫療",
+    "hygiene supplies": "🧻 清潔用品",
+    "accommodation": "🏠 住宿",
+    "other": "➕ 其他"
+}
+transport_display = {
+    "train": "🚆 火車",
+    "bus": "🚌 巴士",
+    "walk": "🚶 步行",
+    "car": "🚗 開車",
+    "scooter": "🛵 機車",
+    "bike": "🚲 單車",
+    "other": "➕ 其他"
+}
 
 # ==========================================
 # 3. 程式主流程
