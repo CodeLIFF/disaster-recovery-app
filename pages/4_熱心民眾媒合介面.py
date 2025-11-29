@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import gspread
@@ -94,8 +93,8 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 
 # UI 顯示字典
 time_display = {"morning": "🌅 早上 (08-11)", "noon": "🌞 中午 (11-13)", "afternoon": "🌇 下午 (13-17)", "night": "🌃 晚上 (17-19)"}
-skills_display = {"supplies distribution": "📦 物資", "cleaning": "🧹 清掃", "medical": "🩺 醫療", "heavy lifting": "🏋️ 搬運", "driver's license": "🚗 駕照", "other": "✨ 其他"}
-resources_display = {"tool": "🛠 工具", "food": "🍱 食物", "water": "🚰 水", "medical supplies": "💊 醫療", "hygiene supplies": "🧻 衛生", "accommodation": "🏠 住宿", "other": "➕ 其他"}
+skills_display = {"supplies distribution": "📦 物資", "cleaning": "🧹 清掃", "medical": "🩺 醫療", "heavy lifting": "🏋️ 搬運", "driver's license": "🚗 駕照", "other": "✨ 其��[...]
+resources_display = {"tool": "🛠 工具", "food": "🍱 食物", "water": "🚰 水", "medical supplies": "💊 醫療", "hygiene supplies": "🧻 衛生", "accommodation": "🏠 住宿", "other": "[...]
 transport_display = {"train": "🚆 火車", "bus": "🚌 巴士", "walk": "🚶 步行", "car": "🚗 開車", "scooter": "🛵 機車", "bike": "🚲 單車", "other": "➕ 其他"}
 
 # ==========================================
@@ -246,7 +245,7 @@ for idx, row in filtered_missions.iterrows():
     left, right = st.columns([2, 1])
     
     with left:
-        st.markdown(f"**🕒 時間：** {translate_list(row['work_time'])}")
+        # 移除純文字的欄位顯示，保留下方格子化、有圖示的標籤顯示
         st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
         
         st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
@@ -260,13 +259,10 @@ for idx, row in filtered_missions.iterrows():
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else "***"
                 st.caption(f"- {v['name']} (***{show_phone})")
         
-        st.markdown(f"**🧰 資源：** {translate_list(row['resources'])}")
         st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
         
-        st.markdown(f"**💪 能力：** {translate_list(row['skills'])}")
         st.markdown(render_labels(row["skills"], skills_display, "#E8F5E9"), unsafe_allow_html=True)
         
-        st.markdown(f"**🚗 交通：** {translate_list(row['transport'])}")
         st.markdown(render_labels(row["transport"], transport_display, "#E3F2FD"), unsafe_allow_html=True)
         
         st.markdown(f"**📝 備註：** {row['note']}")
@@ -300,4 +296,3 @@ for idx, row in filtered_missions.iterrows():
             st.info("尚無照片")
             
     st.markdown("---")
-    
