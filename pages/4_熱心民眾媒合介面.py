@@ -43,13 +43,13 @@ if compact_mode:
         }
         /* 表單元件間距放寬一些 */
         label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
-            margin-top: 0.4rem !important;
-            margin-bottom: 0.4rem !important;
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.15rem !important;
         }
         /* column 內元素間距放寬（備註：Streamlit class 可能變動，視情況微調） */
         .stColumns > div > .element-container, .stColumns > div > div {
-            padding-top: 8px !important;
-            padding-bottom: 8px !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
         }
         /* 小標籤或說明字體微調 */
         .stCaption, .css-1lsmgbg { /* css-1lsmgbg 為示例，實際 class 可能不同 */
@@ -410,7 +410,24 @@ for idx, row in filtered_missions.iterrows():
 
         st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
         
-        # 顯示志工名單 (針對該任務 ID) — 改為不分行顯示所有已報名志工
+        # （已移除）已報名志工欄位：原本在這裡顯示，現在改到備註下方顯示
+
+        # 將小標與格子化標籤合在同一行：提供資源
+        resources_html = f'<span style="font-weight:600;margin-right:8px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
+        st.markdown(resources_html, unsafe_allow_html=True)
+
+        # 將小標與格子化標籤合在同一行：能力需求
+        skills_html = f'<span style="font-weight:600;margin-right:8px">💪 能力需求：</span>{render_labels(row["skills"], skills_display, "#E8F5E9")}'
+        st.markdown(skills_html, unsafe_allow_html=True)
+
+        # 將小標與格子化標籤合在同一行：建議交通方式
+        transport_html = f'<span style="font-weight:600;margin-right:8px">🚗 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#E3F2FD")}'
+        st.markdown(transport_html, unsafe_allow_html=True)
+        
+        # 備註先顯示
+        st.markdown(f"**📝 備註：** {row['note']}")
+
+        # 把「已報名志工」移到備註下方顯示（如有）
         task_vols = volunteers[volunteers["id_number"] == tid]
         if not task_vols.empty:
             vols_display = []
@@ -418,21 +435,7 @@ for idx, row in filtered_missions.iterrows():
                 v_phone = str(v.get('phone', ''))
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else "***"
                 vols_display.append(f"{v.get('name','匿名')} (***{show_phone})")
-            st.markdown("**已報名志工：** " + "、".join(vols_display))
-
-        # 將小標與格子化標籤合在同一行：提供資源
-        resources_html = f'<span style="font-weight:600;margin-right:8px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
-        st.markdown(resources_html, unsafe_allow_html=True)
-
-        # 將小標與格子化標籤合在同一行：能力需求
-        skills_html = f'<span style="font-weight:600;margin-right:8px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#E8F5E9")}'
-        st.markdown(skills_html, unsafe_allow_html=True)
-
-        # 將小標與格子化標籤合在同一行：建議交通方式
-        transport_html = f'<span style="font-weight:600;margin-right:8px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#E3F2FD")}'
-        st.markdown(transport_html, unsafe_allow_html=True)
-        
-        st.markdown(f"**📝 備註：** {row['note']}")
+            st.markdown("**已報名志工（備註下方）：** " + "、".join(vols_display))
 
         # --- 按鈕邏輯 (核心修正) ---
         is_full = current_count >= row["demand_worker"]
