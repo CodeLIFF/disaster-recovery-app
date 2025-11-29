@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import gspread
@@ -57,7 +58,7 @@ def load_data():
         
         # 轉型文字欄位
         text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
-                       "skills", "resources", "transport", "note", "photo", "role", "name"]
+                       "skills", "resources", "transport", "note", "photo", "role", "name","other"]
         for col in text_fields:
             if col in df.columns:
                 df[col] = df[col].fillna("").astype(str).str.strip()
@@ -72,7 +73,7 @@ translate = {
     "morning": "早上", "noon": "中午", "afternoon": "下午", "night": "晚上",
     "tool": "工具", "food": "食物", "water": "飲用水",
     "hygiene supplies": "清潔用品", "cleaning": "清潔",
-    "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車",
+    "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車","other": "其他"
 }
 def t(value):
     value = str(value).strip()
