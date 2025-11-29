@@ -203,6 +203,7 @@ if st.session_state.get("page") == "signup":
             victim_name = ""
             victim_phone = ""
             victim_line = ""
+            victim_note = ""
             if not df_fresh.empty:
                 victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
                 if not victim_rows.empty:
@@ -211,9 +212,10 @@ if st.session_state.get("page") == "signup":
                     # 可能也要標準化 victim phone（如果 Google 吃掉 0）
                     victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
                     victim_line = str(vr.get("line_id", "")).strip()
+                    victim_note = str(vr.get("note", "")).strip()
             
-            contact_note = ""
-            if victim_name or victim_phone or victim_line:
+            # 建立分行顯示的 contact_note（多行字串）
+            if victim_name or victim_phone or victim_line or victim_note:
                 contact_note = f"""這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!
 受災戶姓名：{victim_name}
 電話：{victim_phone}
@@ -236,7 +238,8 @@ LineID：{victim_line}
             
             # 顯示成功訊息與聯絡資訊，並提供「返回列表」按鈕由使用者自行點擊以回到列表（避免訊息閃過）
             st.success("🎉 報名成功！")
-            st.info(contact_note)
+            # 使用 st.markdown 以保留換行顯示（info 也可，但 markdown 更靈活）
+            st.markdown(f"```\n{contact_note}\n```")
             st.write("")  # 空行做些間距
             col1, col2 = st.columns([1, 1])
             with col1:
