@@ -61,6 +61,29 @@ if compact_mode:
         unsafe_allow_html=True,
     )
 
+# 新增：卡片間距（確保「格子之間多留一些空間」）
+st.markdown(
+    """
+    <style>
+    /* 調整水平線（---）的上下 margin，讓版面更有呼吸 */
+    .stMarkdown hr, hr {
+        margin-top: 0.6rem;
+        margin-bottom: 0.6rem;
+        border: none;
+        height: 1px;
+        background: #e6e6e6;
+    }
+    /* 額外的卡片間距區塊（在每個任務卡片後插入一個 spacer） */
+    .card-spacer {
+        height: 1.1rem;
+        width: 100%;
+    }
+    /* 若需更大或更小，可調整 .card-spacer 的 height 值 */
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # ==========================================
 # 1. 初始化設定與連線
 # ==========================================
@@ -439,4 +462,5 @@ for idx, row in filtered_missions.iterrows():
         else:
             st.info("尚無照片")
             
-    st.markdown("---")
+    # 用自定義 spacer 讓每個卡片之間有較多留白，視覺更舒適
+    st.markdown("<div class='card-spacer'></div>", unsafe_allow_html=True)
