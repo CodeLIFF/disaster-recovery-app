@@ -70,7 +70,7 @@ def load_data():
 # 輔助函式：翻譯與標籤顯示
 translate = {
     "morning": "早上", "noon": "中午", "afternoon": "下午", "night": "晚上",
-    "tool": "工具", "food": "食物", "water": "飲用水",
+    "tools": "工具", "food": "食物", "water": "飲用水",
     "hygiene supplies": "清潔用品", "cleaning": "清潔",
     "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車",
 }
