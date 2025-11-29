@@ -225,15 +225,23 @@ if st.session_state.get("page") == "signup":
             ]
             sheet.append_row(row_data)
             
-            # 更新 Session
+            # 更新 Session（但不要立刻 rerun/返回，先讓使用者看到訊息）
             st.session_state["user_phone"] = phone
             st.session_state["my_new_tasks"].append(task_id)
             load_data.clear()
             
-            st.success("🎉 報名成功！受災戶聯絡資訊已加入您的報名列。")
-            st.success(contact_note)
-            st.session_state["page"] = "task_list"
-            st.rerun()
+            # 顯示成功訊息與聯絡資訊，並提供「返回列表」按鈕由使用者自行點擊以回到列表（避免訊息閃過）
+            st.success("🎉 報名成功！")
+            st.info(contact_note)
+            st.write("")  # 空行做些間距
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("返回列表"):
+                    st.session_state["page"] = "task_list"
+                    st.rerun()
+            with col2:
+                if st.button("留在此頁", key="stay_on_signup"):
+                    st.info("您仍停留在報名頁面，可複查資訊或按返回列表。")
             
         except Exception as e:
             st.error(f"連線錯誤: {e}")
