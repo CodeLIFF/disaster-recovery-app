@@ -405,7 +405,7 @@ for idx, row in filtered_missions.iterrows():
             st.markdown(f" 地址： {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
-        time_html = f'<span style="font-weight:600;margin-right:8px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
+        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
 
         st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
@@ -413,15 +413,15 @@ for idx, row in filtered_missions.iterrows():
         # （已移除）已報名志工欄位：原本在這裡顯示，現在改到備註下方顯示
 
         # 將小標與格子化標籤合在同一行：提供資源
-        resources_html = f'<span style="font-weight:600;margin-right:10px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
+        resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
         st.markdown(resources_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：能力需求
-        skills_html = f'<span style="font-weight:600;margin-right:10px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
+        skills_html = f'<span style="font-weight:600;margin-right:25px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
         st.markdown(skills_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：建議交通方式
-        transport_html = f'<span style="font-weight:600;margin-right:10px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
+        transport_html = f'<span style="font-weight:600;margin-right:25px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
         st.markdown(transport_html, unsafe_allow_html=True)
         
         # 備註先顯示
@@ -435,7 +435,7 @@ for idx, row in filtered_missions.iterrows():
                 v_phone = str(v.get('phone', ''))
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else ""
                 vols_display.append(f"{v.get('name','匿名')} ({show_phone})")
-            st.markdown("已報名志工（備註下方）： " + "、".join(vols_display))
+            st.markdown("已報名志工： " + "、".join(vols_display))
 
         # --- 按鈕邏輯 (核心修正) ---
         is_full = current_count >= row["demand_worker"]
