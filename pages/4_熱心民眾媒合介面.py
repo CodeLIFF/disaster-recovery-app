@@ -402,13 +402,13 @@ for idx, row in filtered_missions.iterrows():
         
         # 新增：顯示 address（成為提供資訊之一），標題為加粗"地址："
         if addr:
-            st.markdown(f"** 地址：** {addr}")
+            st.markdown(f" 地址： {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
         time_html = f'<span style="font-weight:600;margin-right:8px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
 
-        st.markdown(f"** 人數：** {current_count} / {row['demand_worker']}")
+        st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
         
         # （已移除）已報名志工欄位：原本在這裡顯示，現在改到備註下方顯示
 
@@ -425,7 +425,7 @@ for idx, row in filtered_missions.iterrows():
         st.markdown(transport_html, unsafe_allow_html=True)
         
         # 備註先顯示
-        st.markdown(f"** 備註：** {row['note']}")
+        st.markdown(f" 備註： {row['note']}")
 
         # 把「已報名志工」移到備註下方顯示（如有）
         task_vols = volunteers[volunteers["id_number"] == tid]
@@ -433,9 +433,9 @@ for idx, row in filtered_missions.iterrows():
             vols_display = []
             for _, v in task_vols.iterrows():
                 v_phone = str(v.get('phone', ''))
-                show_phone = v_phone[-3:] if len(v_phone) >= 3 else "***"
-                vols_display.append(f"{v.get('name','匿名')} (***{show_phone})")
-            st.markdown("**已報名志工（備註下方）：** " + "、".join(vols_display))
+                show_phone = v_phone[-3:] if len(v_phone) >= 3 else ""
+                vols_display.append(f"{v.get('name','匿名')} ({show_phone})")
+            st.markdown("已報名志工（備註下方）： " + "、".join(vols_display))
 
         # --- 按鈕邏輯 (核心修正) ---
         is_full = current_count >= row["demand_worker"]
