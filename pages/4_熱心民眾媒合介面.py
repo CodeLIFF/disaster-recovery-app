@@ -5,6 +5,59 @@ from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
+# 新增：可切換的「緊湊模式」 CSS（用來縮小行距與區塊間距）
+# 把這段放在 set_page_config 後、其他 UI 元素之前，使用者可以在側邊欄開關緊湊模式
+compact_default = True  # 預設啟用緊湊模式，可改為 False
+compact_mode = st.sidebar.checkbox("緊湊模式（減少行距與區塊間距）", value=compact_default)
+
+if compact_mode:
+    st.markdown(
+        """
+        <style>
+        /* main container padding 縮小 */
+        .block-container {
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
+        }
+        /* 減少每個 block 的垂直間距 */
+        .stApp .block-container > div {
+            margin-top: 0.18rem !important;
+            margin-bottom: 0.18rem !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        /* 標題與段落間距縮小，並降低行高 */
+        h1, h2, h3 {
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        .stMarkdown p, .stText p, .stText span, .stMarkdown span {
+            line-height: 1.12 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Button/元件內邊距縮小 */
+        .stButton>button {
+            padding: 4px 8px !important;
+            font-size: 0.95rem !important;
+        }
+        /* 表單元件間距縮小 */
+        label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        /* column 內元素間距縮小（備註：streamlit class 名稱會改變，若更新後無效可以根據實際 DOM 調整） */
+        .stColumns > div > .element-container, .stColumns > div > div {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
+
 # ==========================================
 # 1. 初始化設定與連線
 # ==========================================
