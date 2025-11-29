@@ -4,7 +4,33 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
-
+st.markdown(
+    """
+    <style>
+    /* 水平線（---）上下增加間距 */
+    .stMarkdown hr, hr {
+        margin-top: 1.0rem !important;
+        margin-bottom: 1.0rem !important;
+        height: 1px;
+        background: #e6e6e6;
+        border: none;
+    }
+    /* 卡片之間的 spacer：從 1.1rem 改為 2rem（你可以改成 2.5rem、3rem 等） */
+    .card-spacer {
+        height: 2rem !important;
+        width: 100%;
+    }
+    /* 可選：給卡片加底色與圓角讓間隔更明顯（需搭配在卡片開始/結束輸出開/關 div） */
+    .task-card {
+        margin-bottom: 1.2rem !important;
+        padding: 0.6rem 0.8rem !important;
+        border-radius: 8px !important;
+        background: #fffaf8 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 # 新增：可切換的「緊湊模式」 CSS（用來縮小或放寬行距與區塊間距）
 # 這裡調整為「較鬆」的緊湊樣式：不會太擠，但仍比 Streamlit 預設略緊一些
 compact_default = True  # 預設啟用緊湊模式（但現在為較鬆的緊湊設定）
