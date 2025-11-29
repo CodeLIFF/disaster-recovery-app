@@ -184,36 +184,36 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 
 # UI 顯示字典
 time_display = {
-    "morning": "🌅 早上 (08-11)",
-    "noon": "🌞 中午 (11-13)",
-    "afternoon": "🌇 下午 (13-17)",
-    "night": "🌃 晚上 (17-19)"
+    "morning": " 早上 (08-11)",
+    "noon": " 中午 (11-13)",
+    "afternoon": " 下午 (13-17)",
+    "night": " 晚上 (17-19)"
 }
 skills_display = {
-    "supplies distribution": "📦 物資",
-    "cleaning": "🧹 清掃",
-    "medical": "🩺 醫療",
-    "heavy lifting": "🏋️ 搬運",
-    "driver's license": "🚗 駕照",
-    "other": "✨ 其他"
+    "supplies distribution": " 物資",
+    "cleaning": " 清掃",
+    "medical": " 醫療",
+    "heavy lifting": " 搬運",
+    "driver's license": " 駕照",
+    "other": " 其他"
 }
 resources_display = {
-    "tool": "🛠 工具",
-    "food": "🍱 食物",
-    "water": "🚰 飲用水",
-    "medical supplies": "💊 醫療",
-    "hygiene supplies": "🧻 清潔用品",
-    "accommodation": "🏠 住宿",
-    "other": "➕ 其他"
+    "tool": " 工具",
+    "food": " 食物",
+    "water": " 飲用水",
+    "medical supplies": " 醫療",
+    "hygiene supplies": " 清潔用品",
+    "accommodation": " 住宿",
+    "other": " 其他"
 }
 transport_display = {
-    "train": "🚆 火車",
-    "bus": "🚌 巴士",
-    "walk": "🚶 步行",
-    "car": "🚗 開車",
-    "scooter": "🛵 機車",
-    "bike": "🚲 單車",
-    "other": "➕ 其他"
+    "train": " 火車",
+    "bus": " 巴士",
+    "walk": " 步行",
+    "car": " 開車",
+    "scooter": " 機車",
+    "bike": " 單車",
+    "other": " 其他"
 }
 
 # ==========================================
@@ -414,28 +414,28 @@ for idx, row in filtered_missions.iterrows():
         
         # 顯示 address（成為提供資訊之一）
         if addr:
-            st.markdown(f"**📍 地址：** {addr}")
+            st.markdown(f"** 地址：** {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
-        time_html = f'<span style="font-weight:600;margin-right:20px">🕒 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
+        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
 
-        st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
+        st.markdown(f"** 人數：** {current_count} / {row['demand_worker']}")
         
         # 將小標與格子化標籤合在同一行：提供資源
-        resources_html = f'<span style="font-weight:600;margin-right:25px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
+        resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
         st.markdown(resources_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：能力需求
-        skills_html = f'<span style="font-weight:600;margin-right:25px">💪 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
+        skills_html = f'<span style="font-weight:600;margin-right:25px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
         st.markdown(skills_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：建議交通方式
-        transport_html = f'<span style="font-weight:600;margin-right:25px">🚗 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
+        transport_html = f'<span style="font-weight:600;margin-right:25px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
         st.markdown(transport_html, unsafe_allow_html=True)
         
         # 備註先顯示
-        st.markdown(f"**📝 備註：** {row['note']}")
+        st.markdown(f"** 備註：** {row['note']}")
 
         # 把「已報名志工」移到備註下方顯示（如有）
         task_vols = volunteers[volunteers["id_number"] == tid]
