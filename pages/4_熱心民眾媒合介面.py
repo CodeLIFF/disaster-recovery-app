@@ -273,7 +273,19 @@ for idx, row in filtered_missions.iterrows():
     left, right = st.columns([2, 1])
     
     with left:
-        # 移除純文字的欄位顯示，保留下方格子化、有圖示的標籤顯示
+        # 新增：以 Google Sheet 的 mission_name 當作每個任務的標題（若 mission_name 空白則顯示地址或任務編號）
+        mission_title = str(row.get("mission_name", "")).strip()
+        if mission_title:
+            st.markdown(f"### {mission_title}")
+        else:
+            # fallback 顯示 address 或任務編號
+            addr = str(row.get("address", "")).strip()
+            if addr:
+                st.markdown(f"### 任務地址：{addr}")
+            else:
+                st.markdown(f"### 任務 #{tid}")
+        
+        # 保留格子化標籤（時間）
         st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
         
         st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
