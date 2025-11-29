@@ -193,15 +193,35 @@ if st.session_state.get("page") == "signup":
                     st.rerun()
                 st.stop()
 
-        # --- 4. 寫入資料 (強制保留 0) ---
+        # --- 4. 寫入資料 (強制保留 0)，並將該任務對應的受災戶聯絡資訊與提示一併寫入同一列（最後一欄）
         try:
             # 【關鍵修改】在 phone 前面加上 "'" (單引號)
             # 這會告訴 Google Sheets：「這是文字，不要把它變成數字！」
             phone_to_write = "'" + phone 
+
+            # 先從剛抓回來的 df_fresh 找出該任務的受災戶資料（若有）
+            victim_name = ""
+            victim_phone = ""
+            victim_line = ""
+            if not df_fresh.empty:
+                victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+                if not victim_rows.empty:
+                    vr = victim_rows.iloc[0]
+                    victim_name = str(vr.get("name", "")).strip()
+                    # 可能也要標準化 victim phone（如果 Google 吃掉 0）
+                    victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
+                    victim_line = str(vr.get("line_id", "")).strip()
             
+            contact_note = ""
+            if victim_name or victim_phone or victim_line:
+                contact_note = f"受災戶聯絡資料：{victim_name} / {victim_phone} / {victim_line}。這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!"
+            else:
+                contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
+            
+            # 構造要寫入的 row：保留原本欄位數量的基礎上，把 contact_note 放在最後一欄（若你有固定欄位結構，可對應修改）
             row_data = [
-                int(task_id), "volunteer", name, phone_to_write, line_id, 
-                "", "", "", "", "", "", "" 
+                int(task_id), "volunteer", name, phone_to_write, line_id,
+                "", "", "", "", "", "", contact_note
             ]
             sheet.append_row(row_data)
             
@@ -210,7 +230,8 @@ if st.session_state.get("page") == "signup":
             st.session_state["my_new_tasks"].append(task_id)
             load_data.clear()
             
-            st.success("🎉 報名成功！")
+            st.success("🎉 報名成功！受災戶聯絡資訊已加入您的報名列。")
+            st.success(contact_note)
             st.session_state["page"] = "task_list"
             st.rerun()
             
