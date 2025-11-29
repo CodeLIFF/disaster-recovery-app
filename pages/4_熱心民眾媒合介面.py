@@ -21,7 +21,7 @@ if compact_mode:
         border: none;
     }
     .card-spacer {
-        height: 1.2rem !important;
+        height: 0.6rem !important;
         width: 100%;
     }
 
@@ -35,14 +35,14 @@ if compact_mode:
         color: #333;
     }
 
-    /* 緊湊模式的頁面間距微調 */
+    /* 緊湊模式的頁面間距微調（調整為原先的一半） */
     .block-container {
-        padding-top: 0.6rem !important;
-        padding-bottom: 0.6rem !important;
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
     }
     .stApp .block-container > div {
-        margin-top: 0.28rem !important;
-        margin-bottom: 0.28rem !important;
+        margin-top: 0.14rem !important;
+        margin-bottom: 0.14rem !important;
     }
     .stButton>button {
         padding: 6px 10px !important;
@@ -62,7 +62,7 @@ else:
         border: none;
     }
     .card-spacer {
-        height: 1.8rem !important;
+        height: 0.9rem !important;
         width: 100%;
     }
 
@@ -76,14 +76,14 @@ else:
         color: #333;
     }
 
-    /* 放寬版的頁面間距 */
+    /* 放寬版的頁面間距（調整為原先的一半） */
     .block-container {
-        padding-top: 1.0rem !important;
-        padding-bottom: 1.0rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
     }
     .stApp .block-container > div {
-        margin-top: 0.45rem !important;
-        margin-bottom: 0.45rem !important;
+        margin-top: 0.225rem !important;
+        margin-bottom: 0.225rem !important;
     }
     .stButton>button {
         padding: 8px 12px !important;
