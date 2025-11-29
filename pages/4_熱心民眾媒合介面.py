@@ -398,15 +398,15 @@ for idx, row in filtered_missions.iterrows():
             st.markdown("**已報名志工：** " + "、".join(vols_display))
 
         # 將小標與格子化標籤合在同一行：提供資源
-        resources_html = f'<span style="font-weight:600;margin-right:8px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
+        resources_html = f'<span style="font-weight:600;margin-right:8px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
         st.markdown(resources_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：能力需求
-        skills_html = f'<span style="font-weight:600;margin-right:8px">💪 能力需求：</span>{render_labels(row["skills"], skills_display, "#E8F5E9")}'
+        skills_html = f'<span style="font-weight:600;margin-right:8px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#E8F5E9")}'
         st.markdown(skills_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：建議交通方式
-        transport_html = f'<span style="font-weight:600;margin-right:8px">🚗 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#E3F2FD")}'
+        transport_html = f'<span style="font-weight:600;margin-right:8px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#E3F2FD")}'
         st.markdown(transport_html, unsafe_allow_html=True)
         
         st.markdown(f"**📝 備註：** {row['note']}")
