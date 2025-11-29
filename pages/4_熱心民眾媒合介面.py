@@ -214,7 +214,11 @@ if st.session_state.get("page") == "signup":
             
             contact_note = ""
             if victim_name or victim_phone or victim_line:
-                contact_note = f"受災戶聯絡資料：{victim_name} / {victim_phone} / {victim_line}。這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!"
+                contact_note = f"""這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!
+受災戶姓名：{victim_name}
+電話：{victim_phone}
+LineID：{victim_line}
+備註：{victim_note}"""
             else:
                 contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
             
