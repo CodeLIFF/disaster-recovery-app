@@ -4,10 +4,15 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
-st.markdown(
-    """
+
+# ----- 精簡且不衝突的 CSS（依照側邊欄開關套用） -----
+compact_default = True
+compact_mode = st.sidebar.checkbox("緊湊模式（減少行距與區塊間距）", value=compact_default)
+
+if compact_mode:
+    css = """
     <style>
-    /* 水平線（---）上下增加間距 */
+    /* 卡片間距與 hr */
     .stMarkdown hr, hr {
         margin-top: 1.0rem !important;
         margin-bottom: 1.0rem !important;
@@ -15,100 +20,79 @@ st.markdown(
         background: #e6e6e6;
         border: none;
     }
-    /* 卡片之間的 spacer：從 1.1rem 改為 2rem（你可以改成 2.5rem、3rem 等） */
     .card-spacer {
-        height: 2rem !important;
+        height: 1.2rem !important;
         width: 100%;
     }
-    /* 可選：給卡片加底色與圓角讓間隔更明顯（需搭配在卡片開始/結束輸出開/關 div） */
-    .task-card {
-        margin-bottom: 1.2rem !important;
-        padding: 0.6rem 0.8rem !important;
-        border-radius: 8px !important;
-        background: #fffaf8 !important;
+
+    /* 標籤 (tag) 樣式：保證每個標籤之間至少有一個字元寬度 */
+    .tag-label {
+        display: inline-block;
+        padding: 4px 8px;
+        margin-right: 1ch; /* 至少一個字元寬度的空白 */
+        border-radius: 6px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    /* 緊湊模式的頁面間距微調 */
+    .block-container {
+        padding-top: 0.6rem !important;
+        padding-bottom: 0.6rem !important;
+    }
+    .stApp .block-container > div {
+        margin-top: 0.28rem !important;
+        margin-bottom: 0.28rem !important;
+    }
+    .stButton>button {
+        padding: 6px 10px !important;
+        font-size: 0.95rem !important;
     }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
-# 新增：可切換的「緊湊模式」 CSS（用來縮小或放寬行距與區塊間距）
-# 這裡調整為「較鬆」的緊湊樣式：不會太擠，但仍比 Streamlit 預設略緊一些
-compact_default = True  # 預設啟用緊湊模式（但現在為較鬆的緊湊設定）
-compact_mode = st.sidebar.checkbox("緊湊模式（減少行距與區塊間距）", value=compact_default)
-
-if compact_mode:
-    st.markdown(
-        """
-        <style>
-        /* main container padding：比預設小一些，但不要太擠 */
-        .block-container {
-            padding-top: 0.8rem !important;
-            padding-bottom: 0.8rem !important;
-        }
-        /* 每個 block 的垂直間距：放寬一些 */
-        .stApp .block-container > div {
-            margin-top: 0.35rem !important;
-            margin-bottom: 0.35rem !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-        }
-        /* 標題與段落間距與行高：較舒適 */
-        h1, h2, h3 {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        .stMarkdown p, .stText p, .stText span, .stMarkdown span {
-            line-height: 1.35 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        /* Button/元件內邊距調整為較舒適的大小 */
-        .stButton>button {
-            padding: 6px 10px !important;
-            font-size: 1rem !important;
-        }
-        /* 表單元件間距放寬一些 */
-        label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        /* column 內元素間距放寬（備註：Streamlit class 可能變動，視情況微調） */
-        .stColumns > div > .element-container, .stColumns > div > div {
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
-        }
-        /* 小標籤或說明字體微調 */
-        .stCaption, .css-1lsmgbg { /* css-1lsmgbg 為示例，實際 class 可能不同 */
-            margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# 新增：卡片間距（確保「格子之間多留一些空間」）
-st.markdown(
     """
+else:
+    css = """
     <style>
-    /* 調整水平線（---）的上下 margin，讓版面更有呼吸 */
+    /* 卡片間距與 hr */
     .stMarkdown hr, hr {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        border: none;
+        margin-top: 1.0rem !important;
+        margin-bottom: 1.0rem !important;
         height: 1px;
         background: #e6e6e6;
+        border: none;
     }
-    /* 額外的卡片間距區塊（在每個任務卡片後插入一個 spacer） */
     .card-spacer {
-        height: 1.1rem;
+        height: 1.8rem !important;
         width: 100%;
     }
-    /* 若需更大或更小，可調整 .card-spacer 的 height 值 */
+
+    /* 標籤 (tag) 樣式：保證每個標籤之間至少有一個字元寬度 */
+    .tag-label {
+        display: inline-block;
+        padding: 6px 10px;
+        margin-right: 1ch; /* 至少一個字元寬度的空白 */
+        border-radius: 6px;
+        font-size: 15px;
+        color: #333;
+    }
+
+    /* 放寬版的頁面間距 */
+    .block-container {
+        padding-top: 1.0rem !important;
+        padding-bottom: 1.0rem !important;
+    }
+    .stApp .block-container > div {
+        margin-top: 0.45rem !important;
+        margin-bottom: 0.45rem !important;
+    }
+    .stButton>button {
+        padding: 8px 12px !important;
+        font-size: 1rem !important;
+    }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+    """
+
+st.markdown(css, unsafe_allow_html=True)
 
 # ==========================================
 # 1. 初始化設定與連線
@@ -174,10 +158,10 @@ def load_data():
 
 # 輔助函式：翻譯與標籤顯示
 translate = {
-    "morning": "早上", "noon": "中午", "afternoon": "下午", "night": "晚上",
-    "tool": "工具", "food": "食物", "water": "飲用水",
-    "hygiene supplies": "清潔用品", "cleaning": "清潔",
-    "heavy lifting": "粗重物品搬運", "train": "火車", "walk": "步行", "scooter": "機車", "other": "其他"
+    "morning": " 早上 (08-11) ",
+    "noon": " 中午 (11-13) ",
+    "afternoon": " 下午 (13-17) ",
+    "night": " 晚上 (17-19) "
 }
 def t(value):
     value = str(value).strip()
@@ -188,46 +172,48 @@ def translate_list(text):
     return "、".join([t(p) for p in parts if p])
 
 def render_labels(text, mapping_dict, color="#FFD9C0"):
+    # 以 class="tag-label" 並帶入背景色，確保標籤之間有至少一個字元的空間（CSS margin-right:1ch）
     parts = [p.strip() for p in str(text).split(",") if p.strip()]
     labels = []
     for p in parts:
         label = mapping_dict.get(p, p)
-        html = f'<span style="background:{color};padding:4px 8px;margin-right:6px;border-radius:6px;display:inline-block;font-size:14px;color:#333;">{label}</span>'
+        # 使用 class + inline background color（可被 color 參數覆蓋）
+        html = f'<span class="tag-label" style="background:{color};">{label}</span>'
         labels.append(html)
-    return "".join(labels)
+    return " ".join(labels)  # 用空白將 span 串起（使閱讀上更自然）
 
-# UI 顯示字典（已修正為完整合法的 dict，不會被截斷）
+# UI 顯示字典
 time_display = {
-    "morning": " 早上 (08-11) ",
-    "noon": " 中午 (11-13) ",
-    "afternoon": " 下午 (13-17) ",
-    "night": " 晚上 (17-19) "
+    "morning": "🌅 早上 (08-11)",
+    "noon": "🌞 中午 (11-13)",
+    "afternoon": "🌇 下午 (13-17)",
+    "night": "🌃 晚上 (17-19)"
 }
 skills_display = {
-    "supplies distribution": " 物資 ",
-    "cleaning": " 清掃 ",
-    "medical": " 醫療 ",
-    "heavy lifting": " 搬運 ",
-    "driver's license": " 駕照 ",
-    "other": " 其他 "
+    "supplies distribution": "📦 物資",
+    "cleaning": "🧹 清掃",
+    "medical": "🩺 醫療",
+    "heavy lifting": "🏋️ 搬運",
+    "driver's license": "🚗 駕照",
+    "other": "✨ 其他"
 }
 resources_display = {
-    "tool": " 工具 ",
-    "food": " 食物 ",
-    "water": " 飲用水 ",
-    "medical supplies": " 醫療 ",
-    "hygiene supplies": " 清潔用品 ",
-    "accommodation": " 住宿 ",
-    "other": " 其他 "
+    "tool": "🛠 工具",
+    "food": "🍱 食物",
+    "water": "🚰 飲用水",
+    "medical supplies": "💊 醫療",
+    "hygiene supplies": "🧻 清潔用品",
+    "accommodation": "🏠 住宿",
+    "other": "➕ 其他"
 }
 transport_display = {
-    "train": " 火車 ",
-    "bus": " 巴士 ",
-    "walk": " 步行 ",
-    "car": " 開車 ",
-    "scooter": " 機車 ",
-    "bike": " 單車 ",
-    "other": " 其他 "
+    "train": "🚆 火車",
+    "bus": "🚌 巴士",
+    "walk": "🚶 步行",
+    "car": "🚗 開車",
+    "scooter": "🛵 機車",
+    "bike": "🚲 單車",
+    "other": "➕ 其他"
 }
 
 # ==========================================
@@ -426,32 +412,30 @@ for idx, row in filtered_missions.iterrows():
             else:
                 st.markdown(f"### 任務 #{tid}")
         
-        # 新增：顯示 address（成為提供資訊之一），標題為加粗"地址："
+        # 顯示 address（成為提供資訊之一）
         if addr:
-            st.markdown(f" 地址： {addr}")
+            st.markdown(f"**📍 地址：** {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
-        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
+        time_html = f'<span style="font-weight:600;margin-right:20px">🕒 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
 
-        st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
+        st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
         
-        # （已移除）已報名志工欄位：原本在這裡顯示，現在改到備註下方顯示
-
         # 將小標與格子化標籤合在同一行：提供資源
-        resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
+        resources_html = f'<span style="font-weight:600;margin-right:25px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
         st.markdown(resources_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：能力需求
-        skills_html = f'<span style="font-weight:600;margin-right:25px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
+        skills_html = f'<span style="font-weight:600;margin-right:25px">💪 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
         st.markdown(skills_html, unsafe_allow_html=True)
 
         # 將小標與格子化標籤合在同一行：建議交通方式
-        transport_html = f'<span style="font-weight:600;margin-right:25px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
+        transport_html = f'<span style="font-weight:600;margin-right:25px">🚗 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
         st.markdown(transport_html, unsafe_allow_html=True)
         
         # 備註先顯示
-        st.markdown(f" 備註： {row['note']}")
+        st.markdown(f"**📝 備註：** {row['note']}")
 
         # 把「已報名志工」移到備註下方顯示（如有）
         task_vols = volunteers[volunteers["id_number"] == tid]
@@ -461,7 +445,7 @@ for idx, row in filtered_missions.iterrows():
                 v_phone = str(v.get('phone', ''))
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else ""
                 vols_display.append(f"{v.get('name','匿名')} ({show_phone})")
-            st.markdown("已報名志工： " + "、".join(vols_display))
+            st.markdown("**已報名志工：** " + "、".join(vols_display))
 
         # --- 按鈕邏輯 (核心修正) ---
         is_full = current_count >= row["demand_worker"]
