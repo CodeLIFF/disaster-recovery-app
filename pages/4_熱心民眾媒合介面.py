@@ -414,13 +414,13 @@ for idx, row in filtered_missions.iterrows():
         
         # 顯示 address（成為提供資訊之一）
         if addr:
-            st.markdown(f"** 地址：** {addr}")
+            st.markdown(f"地址： {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
         time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
 
-        st.markdown(f"** 人數：** {current_count} / {row['demand_worker']}")
+        st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
         
         # 將小標與格子化標籤合在同一行：提供資源
         resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
@@ -435,7 +435,7 @@ for idx, row in filtered_missions.iterrows():
         st.markdown(transport_html, unsafe_allow_html=True)
         
         # 備註先顯示
-        st.markdown(f"** 備註：** {row['note']}")
+        st.markdown(f" 備註： {row['note']}")
 
         # 把「已報名志工」移到備註下方顯示（如有）
         task_vols = volunteers[volunteers["id_number"] == tid]
