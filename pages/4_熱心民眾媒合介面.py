@@ -214,7 +214,7 @@ if st.session_state.get("page") == "signup":
             
             contact_note = ""
             if victim_name or victim_phone or victim_line:
-                contact_note = f"受災戶聯絡資料：/n 受災戶姓名：{victim_name} /n 連絡電話：{victim_phone} /n Line ID： {victim_line}/n這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!"
+                contact_note = f"受災戶聯絡資料：{victim_name} / {victim_phone} / {victim_line}。這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!"
             else:
                 contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
             
@@ -304,15 +304,19 @@ for idx, row in filtered_missions.iterrows():
     with left:
         # 新增：以 Google Sheet 的 mission_name 當作每個任務的標題（若 mission_name 空白則顯示地址或任務編號）
         mission_title = str(row.get("mission_name", "")).strip()
+        addr = str(row.get("address", "")).strip()
         if mission_title:
             st.markdown(f"### {mission_title}")
         else:
             # fallback 顯示 address 或任務編號
-            addr = str(row.get("address", "")).strip()
             if addr:
                 st.markdown(f"### 任務地址：{addr}")
             else:
                 st.markdown(f"### 任務 #{tid}")
+        
+        # 新增：顯示 address（成為提供資訊之一），標題為加粗"地址："
+        if addr:
+            st.markdown(f"**📍 地址：** {addr}")
         
         # 將小標與格子化標籤合在同一行：工作時間
         time_html = f'<span style="font-weight:600;margin-right:8px">🕒 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFE6C7")}'
