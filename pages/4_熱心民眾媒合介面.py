@@ -43,13 +43,13 @@ if compact_mode:
         }
         /* 表單元件間距放寬一些 */
         label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
-            margin-top: 0.15rem !important;
-            margin-bottom: 0.15rem !important;
+            margin-top: 0.4rem !important;
+            margin-bottom: 0.4rem !important;
         }
         /* column 內元素間距放寬（備註：Streamlit class 可能變動，視情況微調） */
         .stColumns > div > .element-container, .stColumns > div > div {
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
         }
         /* 小標籤或說明字體微調 */
         .stCaption, .css-1lsmgbg { /* css-1lsmgbg 為示例，實際 class 可能不同 */
