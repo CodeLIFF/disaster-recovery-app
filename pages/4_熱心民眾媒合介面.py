@@ -5,58 +5,61 @@ from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
-# 新增：可切換的「緊湊模式」 CSS（用來縮小行距與區塊間距）
-# 把這段放在 set_page_config 後、其他 UI 元素之前，使用者可以在側邊欄開關緊湊模式
-compact_default = True  # 預設啟用緊湊模式，可改為 False
+# 新增：可切換的「緊湊模式」 CSS（用來縮小或放寬行距與區塊間距）
+# 這裡調整為「較鬆」的緊湊樣式：不會太擠，但仍比 Streamlit 預設略緊一些
+compact_default = True  # 預設啟用緊湊模式（但現在為較鬆的緊湊設定）
 compact_mode = st.sidebar.checkbox("緊湊模式（減少行距與區塊間距）", value=compact_default)
 
 if compact_mode:
     st.markdown(
         """
         <style>
-        /* main container padding 縮小 */
+        /* main container padding：比預設小一些，但不要太擠 */
         .block-container {
-            padding-top: 0.4rem !important;
-            padding-bottom: 0.4rem !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
         }
-        /* 減少每個 block 的垂直間距 */
+        /* 每個 block 的垂直間距：放寬一些 */
         .stApp .block-container > div {
-            margin-top: 0.18rem !important;
-            margin-bottom: 0.18rem !important;
+            margin-top: 0.35rem !important;
+            margin-bottom: 0.35rem !important;
             padding-top: 0 !important;
             padding-bottom: 0 !important;
         }
-        /* 標題與段落間距縮小，並降低行高 */
+        /* 標題與段落間距與行高：較舒適 */
         h1, h2, h3 {
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.25rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
         }
         .stMarkdown p, .stText p, .stText span, .stMarkdown span {
-            line-height: 1.12 !important;
+            line-height: 1.35 !important;
             margin: 0 !important;
             padding: 0 !important;
         }
-        /* Button/元件內邊距縮小 */
+        /* Button/元件內邊距調整為較舒適的大小 */
         .stButton>button {
-            padding: 4px 8px !important;
-            font-size: 0.95rem !important;
+            padding: 6px 10px !important;
+            font-size: 1rem !important;
         }
-        /* 表單元件間距縮小 */
+        /* 表單元件間距放寬一些 */
         label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.15rem !important;
         }
-        /* column 內元素間距縮小（備註：streamlit class 名稱會改變，若更新後無效可以根據實際 DOM 調整） */
+        /* column 內元素間距放寬（備註：Streamlit class 可能變動，視情況微調） */
         .stColumns > div > .element-container, .stColumns > div > div {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
+        /* 小標籤或說明字體微調 */
+        .stCaption, .css-1lsmgbg { /* css-1lsmgbg 為示例，實際 class 可能不同 */
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
-
-st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
 # ==========================================
 # 1. 初始化設定與連線
