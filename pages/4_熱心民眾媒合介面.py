@@ -43,8 +43,8 @@ if compact_mode:
         }
         /* 表單元件間距放寬一些 */
         label[for], .stTextInput, .stSelectbox, .stTextArea, .stNumberInput {
-            margin-top: 0.15rem !important;
-            margin-bottom: 0.15rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
         }
         /* column 內元素間距放寬（備註：Streamlit class 可能變動，視情況微調） */
         .stColumns > div > .element-container, .stColumns > div > div {
@@ -53,8 +53,8 @@ if compact_mode:
         }
         /* 小標籤或說明字體微調 */
         .stCaption, .css-1lsmgbg { /* css-1lsmgbg 為示例，實際 class 可能不同 */
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.25rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
         }
         </style>
         """,
@@ -67,8 +67,8 @@ st.markdown(
     <style>
     /* 調整水平線（---）的上下 margin，讓版面更有呼吸 */
     .stMarkdown hr, hr {
-        margin-top: 0.6rem;
-        margin-bottom: 0.6rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
         border: none;
         height: 1px;
         background: #e6e6e6;
