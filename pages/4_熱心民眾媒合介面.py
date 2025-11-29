@@ -285,10 +285,10 @@ for idx, row in filtered_missions.iterrows():
             else:
                 st.markdown(f"### 任務 #{tid}")
         
-        # 新增小標與格子化標籤：工作時間
-        st.markdown(f"**🕒 工作時間：**")
-        st.markdown(render_labels(row["work_time"], time_display, "#FFE6C7"), unsafe_allow_html=True)
-        
+        # 將小標與格子化標籤合在同一行：工作時間
+        time_html = f'<span style="font-weight:600;margin-right:8px">🕒 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFE6C7")}'
+        st.markdown(time_html, unsafe_allow_html=True)
+
         st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
         
         # 顯示志工名單 (針對該任務 ID)
@@ -300,17 +300,17 @@ for idx, row in filtered_missions.iterrows():
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else "***"
                 st.caption(f"- {v['name']} (***{show_phone})")
         
-        # 新增小標與格子化標籤：提供資源
-        st.markdown(f"**🧰 提供資源：**")
-        st.markdown(render_labels(row["resources"], resources_display, "#FFF9C4"), unsafe_allow_html=True)
-        
-        # 新增小標與格子化標籤：能力需求
-        st.markdown(f"**💪 能力需求：**")
-        st.markdown(render_labels(row["skills"], skills_display, "#E8F5E9"), unsafe_allow_html=True)
-        
-        # 新增小標與格子化標籤：建議交通方式
-        st.markdown(f"**🚗 建議交通方式：**")
-        st.markdown(render_labels(row["transport"], transport_display, "#E3F2FD"), unsafe_allow_html=True)
+        # 將小標與格子化標籤合在同一行：提供資源
+        resources_html = f'<span style="font-weight:600;margin-right:8px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
+        st.markdown(resources_html, unsafe_allow_html=True)
+
+        # 將小標與格子化標籤合在同一行：能力需求
+        skills_html = f'<span style="font-weight:600;margin-right:8px">💪 能力需求：</span>{render_labels(row["skills"], skills_display, "#E8F5E9")}'
+        st.markdown(skills_html, unsafe_allow_html=True)
+
+        # 將小標與格子化標籤合在同一行：建議交通方式
+        transport_html = f'<span style="font-weight:600;margin-right:8px">🚗 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#E3F2FD")}'
+        st.markdown(transport_html, unsafe_allow_html=True)
         
         st.markdown(f"**📝 備註：** {row['note']}")
 
