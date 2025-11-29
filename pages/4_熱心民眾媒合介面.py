@@ -172,36 +172,36 @@ def render_labels(text, mapping_dict, color="#FFD9C0"):
 
 # UI 顯示字典（已修正為完整合法的 dict，不會被截斷）
 time_display = {
-    "morning": " 早上 (08-11)",
-    "noon": " 中午 (11-13)",
-    "afternoon": " 下午 (13-17)",
-    "night": " 晚上 (17-19)"
+    "morning": " 早上 (08-11) ",
+    "noon": " 中午 (11-13) ",
+    "afternoon": " 下午 (13-17) ",
+    "night": " 晚上 (17-19) "
 }
 skills_display = {
-    "supplies distribution": " 物資",
-    "cleaning": " 清掃",
-    "medical": " 醫療",
-    "heavy lifting": " 搬運",
-    "driver's license": " 駕照",
-    "other": " 其他"
+    "supplies distribution": " 物資 ",
+    "cleaning": " 清掃 ",
+    "medical": " 醫療 ",
+    "heavy lifting": " 搬運 ",
+    "driver's license": " 駕照 ",
+    "other": " 其他 "
 }
 resources_display = {
-    "tool": " 工具",
-    "food": " 食物",
-    "water": " 飲用水",
-    "medical supplies": " 醫療",
-    "hygiene supplies": " 清潔用品",
-    "accommodation": " 住宿",
-    "other": " 其他"
+    "tool": " 工具 ",
+    "food": " 食物 ",
+    "water": " 飲用水 ",
+    "medical supplies": " 醫療 ",
+    "hygiene supplies": " 清潔用品 ",
+    "accommodation": " 住宿 ",
+    "other": " 其他 "
 }
 transport_display = {
-    "train": " 火車",
-    "bus": " 巴士",
-    "walk": " 步行",
-    "car": " 開車",
-    "scooter": " 機車",
-    "bike": " 單車",
-    "other": " 其他"
+    "train": " 火車 ",
+    "bus": " 巴士 ",
+    "walk": " 步行 ",
+    "car": " 開車 ",
+    "scooter": " 機車 ",
+    "bike": " 單車 ",
+    "other": " 其他 "
 }
 
 # ==========================================
