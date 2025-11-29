@@ -324,15 +324,16 @@ for idx, row in filtered_missions.iterrows():
 
         st.markdown(f"**👥 人數：** {current_count} / {row['demand_worker']}")
         
-        # 顯示志工名單 (針對該任務 ID)
+        # 顯示志工名單 (針對該任務 ID) — 改為不分行顯示所有已報名志工
         task_vols = volunteers[volunteers["id_number"] == tid]
         if not task_vols.empty:
-            st.caption("已報名志工：")
+            vols_display = []
             for _, v in task_vols.iterrows():
-                v_phone = str(v['phone'])
+                v_phone = str(v.get('phone', ''))
                 show_phone = v_phone[-3:] if len(v_phone) >= 3 else "***"
-                st.caption(f"- {v['name']} (***{show_phone})")
-        
+                vols_display.append(f"{v.get('name','匿名')} (***{show_phone})")
+            st.markdown("**已報名志工：** " + "、".join(vols_display))
+
         # 將小標與格子化標籤合在同一行：提供資源
         resources_html = f'<span style="font-weight:600;margin-right:8px">🧰 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFF9C4")}'
         st.markdown(resources_html, unsafe_allow_html=True)
