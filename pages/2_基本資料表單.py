@@ -40,7 +40,7 @@ def is_duplicate(role, name, phone):
 
 
 # ---------- Streamlit 表單本體 ----------
-st.title("基本資料表單（志工 / 受災戶）")
+st.title("註冊/登入")
 
 role_display = st.selectbox("身分 role", ["志工 volunteer", "受災戶 victim"])
 role = "volunteer" if "志工" in role_display else "victim"
