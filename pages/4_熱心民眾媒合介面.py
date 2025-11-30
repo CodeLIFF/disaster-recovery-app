@@ -44,6 +44,33 @@ css = """
     padding: 6px 10px !important;
     font-size: 0.95rem !important;
 }
+/* 工作時間 multiselect - 對應 #FFF8EC */
+div[data-testid="stMultiSelect"]:nth-of-type(1) [data-baseweb="tag"] {
+    background-color: #FFF8EC !important;
+    color: #333 !important;
+    border: 1px solid #FFD9C0 !important;
+}
+
+/* 能力需求 multiselect - 對應 #ADEDCC */
+div[data-testid="stMultiSelect"]:nth-of-type(2) [data-baseweb="tag"] {
+    background-color: #ADEDCC !important;
+    color: #333 !important;
+    border: 1px solid #66BB6A !important;
+}
+
+/* 提供資源 multiselect - 對應 #FFE3B3 */
+div[data-testid="stMultiSelect"]:nth-of-type(3) [data-baseweb="tag"] {
+    background-color: #FFE3B3 !important;
+    color: #333 !important;
+    border: 1px solid #FFA726 !important;
+}
+
+/* 建議交通 multiselect - 對應 #35D0C7 */
+div[data-testid="stMultiSelect"]:nth-of-type(4) [data-baseweb="tag"] {
+    background-color: #35D0C7 !important;
+    color: white !important;
+    border: 1px solid #00ACC1 !important;
+}
 </style>
 """
 
