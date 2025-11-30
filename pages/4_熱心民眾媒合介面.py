@@ -71,11 +71,7 @@ div[data-testid="stMultiSelect"]:nth-of-type(4) [data-baseweb="tag"] {
     color: white !important;
     border: 1px solid #35D0C7 !important;
 }
-/* 只針對搜尋按鈕 */
-button[data-testid="baseButton-primary"][aria-label="search_btn"] {
-    background-color: #e6e6e6 !important;
-    color: #333 !important;
-}
+
 </style>
 """
 
@@ -343,7 +339,7 @@ st.title("災後人力媒合平台（熱心民眾端）")
 st.caption("以下為受災戶上傳的最新需求")
 
 # 1. 搜尋過濾
-st.subheader("🔍 篩選條件")
+st.subheader(" 篩選條件")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -364,7 +360,7 @@ with col4:
     selected_transports = st.multiselect("建議交通", transport_options, placeholder="選擇交通方式")
 
 # 地址關鍵字搜尋
-keyword = st.text_input("🔍 地址關鍵字搜尋", placeholder="輸入地址關鍵字")
+keyword = st.text_input(" 地址關鍵字搜尋", placeholder="輸入地址關鍵字")
 
 # 搜尋按鈕
 search_button = st.button("🔍 開始搜尋", type="primary", use_container_width=False, key="search_btn")
