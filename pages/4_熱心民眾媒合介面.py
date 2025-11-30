@@ -90,6 +90,17 @@ if "page" not in st.session_state:
     st.session_state["page"] = "task_list"  # 預設頁面
 # selected_task_id 會在點選報名按鈕時被設定
 
+# 安全 rerun wrapper（處理不同 Streamlit 版本沒有 experimental_rerun 屬性的情況）
+def safe_rerun():
+    # 先嘗試呼叫常見的 rerun 實作
+    for name in ("experimental_rerun", "rerun"):
+        fn = getattr(st, name, None)
+        if callable(fn):
+            return fn()
+    # 若都沒有，使用 session_state toggle 並 stop（可在下次互動時看到更新）
+    st.session_state["_safe_rerun_trigger"] = not st.session_state.get("_safe_rerun_trigger", False)
+    st.stop()
+
 # Google Sheet 連線 (使用快取資源，避免重複連線)
 @st.cache_resource
 def get_sheet_connection():
@@ -224,9 +235,6 @@ else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
 
-# 如果使用者按了「我要報名」，我們會把 page 設為 "signup" 並儲存 selected_task_id
-# 這個邏輯在下方的任務列表區域處理按鈕時會執行
-
 # 分支：signup 頁面（驗證身份 + 報名流程）
 if st.session_state.get("page") == "signup":
     # 確保有選到任務 ID
@@ -235,7 +243,7 @@ if st.session_state.get("page") == "signup":
         st.error("未選擇報名的任務，請從任務列表選擇任務後再報名。")
         if st.button("返回任務列表"):
             st.session_state["page"] = "task_list"
-            st.rerun()
+            safe_rerun()
         st.stop()
 
     st.title("報名任務")
@@ -292,7 +300,7 @@ if st.session_state.get("page") == "signup":
                             st.info(f"資料庫中已註冊電話範例：{', '.join(masked_phones)}")
                         if st.button("返回任務列表"):
                             st.session_state["page"] = "task_list"
-                            st.rerun()
+                            safe_rerun()
                         st.stop()
                     else:
                         # 驗證成功，取一筆代表資料
@@ -311,7 +319,7 @@ if st.session_state.get("page") == "signup":
                             "line_id": str(vol_info.get("line_id", ""))
                         }
                         st.success(f"✅ 驗證成功！歡迎 {vol_info.get('name', '志工')}！")
-                        st.experimental_rerun()
+                        safe_rerun()
 
     # 階段 2: 已驗證身份，進行報名
     else:
@@ -328,7 +336,7 @@ if st.session_state.get("page") == "signup":
             if st.button("返回任務列表"):
                 st.session_state["page"] = "task_list"
                 del st.session_state["verified_volunteer"]
-                st.rerun()
+                safe_rerun()
             st.stop()
 
         df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
@@ -352,12 +360,12 @@ if st.session_state.get("page") == "signup":
                 if st.button("返回列表"):
                     del st.session_state["verified_volunteer"]
                     st.session_state["page"] = "task_list"
-                    st.rerun()
+                    safe_rerun()
             with col2:
                 if st.button("報名其他任務"):
                     del st.session_state["verified_volunteer"]
                     st.session_state["page"] = "task_list"
-                    st.rerun()
+                    safe_rerun()
             st.stop()
 
         # 顯示任務資訊
@@ -423,7 +431,7 @@ LineID：{victim_line}
                     del st.session_state["verified_volunteer"]
                     if st.button("返回任務列表", use_container_width=True):
                         st.session_state["page"] = "task_list"
-                        st.rerun()
+                        safe_rerun()
 
                 except Exception as e:
                     st.error(f"報名失敗: {e}")
@@ -434,7 +442,7 @@ LineID：{victim_line}
                 if "verified_volunteer" in st.session_state:
                     del st.session_state["verified_volunteer"]
                 st.session_state["page"] = "task_list"
-                st.rerun()
+                safe_rerun()
 
     st.stop()
 
@@ -604,7 +612,7 @@ for idx, row in filtered_missions.iterrows():
             if st.button("我要報名", key=f"btn_{tid}"):
                 st.session_state["page"] = "signup"
                 st.session_state["selected_task_id"] = int(tid)
-                st.rerun()
+                safe_rerun()
 
     with right:
         photo = str(row.get("photo", "")).strip()
