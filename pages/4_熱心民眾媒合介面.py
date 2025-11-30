@@ -5,92 +5,47 @@ from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
-# ----- 精簡且不衝突的 CSS（依照側邊欄開關套用） -----
-compact_default = True
-compact_mode = st.sidebar.checkbox("緊湊模式（減少行距與區塊間距）", value=compact_default)
+# ----- 緊湊模式 CSS（預設套用） -----
+css = """
+<style>
+/* 卡片間距與 hr */
+.stMarkdown hr, hr {
+    margin-top: 1.0rem !important;
+    margin-bottom: 1.0rem !important;
+    height: 1px;
+    background: #e6e6e6;
+    border: none;
+}
+.card-spacer {
+    height: 0.6rem !important;
+    width: 100%;
+}
 
-if compact_mode:
-    css = """
-    <style>
-    /* 卡片間距與 hr */
-    .stMarkdown hr, hr {
-        margin-top: 1.0rem !important;
-        margin-bottom: 1.0rem !important;
-        height: 1px;
-        background: #e6e6e6;
-        border: none;
-    }
-    .card-spacer {
-        height: 0.6rem !important;
-        width: 100%;
-    }
+/* 標籤 (tag) 樣式：保證每個標籤之間至少有一個字元寬度 */
+.tag-label {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 1ch; /* 至少一個字元寬度的空白 */
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+}
 
-    /* 標籤 (tag) 樣式：保證每個標籤之間至少有一個字元寬度 */
-    .tag-label {
-        display: inline-block;
-        padding: 4px 8px;
-        margin-right: 1ch; /* 至少一個字元寬度的空白 */
-        border-radius: 6px;
-        font-size: 14px;
-        color: #333;
-    }
-
-    /* 緊湊模式的頁面間距微調（調整為原先的一半） */
-    .block-container {
-        padding-top: 0.3rem !important;
-        padding-bottom: 0.3rem !important;
-    }
-    .stApp .block-container > div {
-        margin-top: 0.14rem !important;
-        margin-bottom: 0.14rem !important;
-    }
-    .stButton>button {
-        padding: 6px 10px !important;
-        font-size: 0.95rem !important;
-    }
-    </style>
-    """
-else:
-    css = """
-    <style>
-    /* 卡片間距與 hr */
-    .stMarkdown hr, hr {
-        margin-top: 1.0rem !important;
-        margin-bottom: 1.0rem !important;
-        height: 1px;
-        background: #e6e6e6;
-        border: none;
-    }
-    .card-spacer {
-        height: 0.9rem !important;
-        width: 100%;
-    }
-
-    /* 標籤 (tag) 樣式：保證每個標籤之間至少有一個字元寬度 */
-    .tag-label {
-        display: inline-block;
-        padding: 6px 10px;
-        margin-right: 1ch; /* 至少一個字元寬度的空白 */
-        border-radius: 6px;
-        font-size: 15px;
-        color: #333;
-    }
-
-    /* 放寬版的頁面間距（調整為原先的一半） */
-    .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-    }
-    .stApp .block-container > div {
-        margin-top: 0.225rem !important;
-        margin-bottom: 0.225rem !important;
-    }
-    .stButton>button {
-        padding: 8px 12px !important;
-        font-size: 1rem !important;
-    }
-    </style>
-    """
+/* 緊湊模式的頁面間距微調（調整為原先的一半） */
+.block-container {
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+}
+.stApp .block-container > div {
+    margin-top: 0.14rem !important;
+    margin-bottom: 0.14rem !important;
+}
+.stButton>button {
+    padding: 6px 10px !important;
+    font-size: 0.95rem !important;
+}
+</style>
+"""
 
 st.markdown(css, unsafe_allow_html=True)
 
@@ -356,15 +311,71 @@ st.title("災後人力媒合平台（熱心民眾端）")
 st.caption("以下為受災戶上傳的最新需求")
 
 # 1. 搜尋過濾
-keyword = st.text_input("🔍 搜尋（地址、能力、資源、備註）")
+st.subheader("🔍 篩選條件")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    time_options = ["全部時段"] + list(time_display.values())
+    selected_time = st.selectbox("工作時間", time_options)
+
+with col2:
+    skill_options = ["全部技能"] + list(skills_display.values())
+    selected_skill = st.selectbox("能力需求", skill_options)
+
+with col3:
+    resource_options = ["全部資源"] + list(resources_display.values())
+    selected_resource = st.selectbox("提供資源", resource_options)
+
+with col4:
+    transport_options = ["全部交通方式"] + list(transport_display.values())
+    selected_transport = st.selectbox("建議交通", transport_options)
+
+# 地址關鍵字搜尋
+keyword = st.text_input("🔍 地址關鍵字搜尋")
+
+# 反向映射字典（從顯示文字找回原始 key）
+time_reverse = {v: k for k, v in time_display.items()}
+skills_reverse = {v: k for k, v in skills_display.items()}
+resources_reverse = {v: k for k, v in resources_display.items()}
+transport_reverse = {v: k for k, v in transport_display.items()}
+
+# 開始過濾
 filtered_missions = missions.copy()
+
+# 過濾工作時間
+if selected_time != "全部時段":
+    time_key = time_reverse[selected_time]
+    filtered_missions = filtered_missions[
+        filtered_missions["work_time"].str.contains(time_key, case=False, na=False)
+    ]
+
+# 過濾技能
+if selected_skill != "全部技能":
+    skill_key = skills_reverse[selected_skill]
+    filtered_missions = filtered_missions[
+        filtered_missions["skills"].str.contains(skill_key, case=False, na=False)
+    ]
+
+# 過濾資源
+if selected_resource != "全部資源":
+    resource_key = resources_reverse[selected_resource]
+    filtered_missions = filtered_missions[
+        filtered_missions["resources"].str.contains(resource_key, case=False, na=False)
+    ]
+
+# 過濾交通方式
+if selected_transport != "全部交通方式":
+    transport_key = transport_reverse[selected_transport]
+    filtered_missions = filtered_missions[
+        filtered_missions["transport"].str.contains(transport_key, case=False, na=False)
+    ]
+
+# 過濾地址關鍵字
 if keyword:
     k = keyword.strip()
     filtered_missions = filtered_missions[
-        filtered_missions["address"].str.contains(k, case=False) |
-        filtered_missions["skills"].str.contains(k, case=False) |
-        filtered_missions["resources"].str.contains(k, case=False) |
-        filtered_missions["note"].str.contains(k, case=False)
+        filtered_missions["address"].str.contains(k, case=False, na=False)
     ]
 
 st.write(f"共 {len(filtered_missions)} 筆需求")
