@@ -48,28 +48,33 @@ css = """
 div[data-testid="stMultiSelect"]:nth-of-type(1) [data-baseweb="tag"] {
     background-color: #FFF8EC !important;
     color: #333 !important;
-    border: 1px solid #FFD9C0 !important;
+    border: 1px solid #FFF8EC !important;
 }
 
 /* 能力需求 multiselect - 對應 #ADEDCC */
 div[data-testid="stMultiSelect"]:nth-of-type(2) [data-baseweb="tag"] {
     background-color: #ADEDCC !important;
     color: #333 !important;
-    border: 1px solid #66BB6A !important;
+    border: 1px solid #ADEDCC !important;
 }
 
 /* 提供資源 multiselect - 對應 #FFE3B3 */
 div[data-testid="stMultiSelect"]:nth-of-type(3) [data-baseweb="tag"] {
     background-color: #FFE3B3 !important;
     color: #333 !important;
-    border: 1px solid #FFA726 !important;
+    border: 1px solid #FFE3B3 !important;
 }
 
 /* 建議交通 multiselect - 對應 #35D0C7 */
 div[data-testid="stMultiSelect"]:nth-of-type(4) [data-baseweb="tag"] {
     background-color: #35D0C7 !important;
     color: white !important;
-    border: 1px solid #00ACC1 !important;
+    border: 1px solid #35D0C7 !important;
+}
+/* 只針對搜尋按鈕 */
+button[data-testid="baseButton-primary"][aria-label="search_btn"] {
+    background-color: #e6e6e6 !important;
+    color: #333 !important;
 }
 </style>
 """
@@ -362,7 +367,7 @@ with col4:
 keyword = st.text_input("🔍 地址關鍵字搜尋", placeholder="輸入地址關鍵字")
 
 # 搜尋按鈕
-search_button = st.button("🔍 開始搜尋", type="primary", use_container_width=False)
+search_button = st.button("🔍 開始搜尋", type="primary", use_container_width=False, key="search_btn")
 
 # 反向映射字典（從顯示文字找回原始 key）
 time_reverse = {v: k for k, v in time_display.items()}
