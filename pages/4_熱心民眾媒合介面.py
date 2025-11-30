@@ -214,11 +214,7 @@ else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
 
-# --- 步驟 B: 處理報名頁面 (Signup Page) ---
-if st.session_state.get("page") == "signup":
-    st.title(" 志工身份驗證")
-    
-    # === 階段 1: 驗證身份（檢查是否已註冊） ===
+# === 階段 1: 驗證身份（檢查是否已註冊） ===
     if "verified_volunteer" not in st.session_state:
         st.info("請先驗證您的志工身份（需先在系統中註冊）")
         
@@ -231,13 +227,19 @@ if st.session_state.get("page") == "signup":
             if not verify_phone:
                 st.warning("❌ 請輸入手機號碼")
                 st.stop()
+            
+            # 標準化輸入的手機號碼
+            verify_phone = verify_phone.strip()
+            if not verify_phone.startswith("0") and len(verify_phone) == 9:
+                verify_phone = "0" + verify_phone
+            
             if not (verify_phone.isdigit() and len(verify_phone) == 10 and verify_phone.startswith("09")):
                 st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
                 st.stop()
             
             # 定義手機號碼標準化函式
             def normalize_phone(p):
-                p = str(p).strip()
+                p = str(p).strip().replace("'", "")  # 移除可能的單引號
                 if len(p) == 9 and p.startswith("9"):
                     return "0" + p
                 return p
@@ -247,26 +249,60 @@ if st.session_state.get("page") == "signup":
             df_fresh = load_data()
             
             if not df_fresh.empty:
+                # 標準化所有電話號碼
                 df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
                 
-                # 檢查是否為已註冊的志工（role = "volunteer" 且沒有 id_number，代表是純註冊資料）
-                registered_vols = df_fresh[
-                    (df_fresh["role"] == "volunteer") & 
-                    (df_fresh["id_number"] == 0)  # id_number = 0 代表是註冊資料，不是報名記錄
-                ]
+                # 【修正1】先顯示除錯資訊（可選）
+                st.write("🔍 資料庫中的志工記錄：")
+                volunteer_records = df_fresh[df_fresh["role"] == "volunteer"]
+                st.write(f"總共 {len(volunteer_records)} 筆志工資料")
                 
+                # 【修正2】放寬篩選條件：只要 role = "volunteer" 就算
+                # 因為有些註冊資料的 id_number 可能不是 0（可能是空字串或其他值）
+                registered_vols = df_fresh[df_fresh["role"] == "volunteer"].copy()
+                
+                # 顯示前5筆資料供除錯（可選）
+                if len(registered_vols) > 0:
+                    st.write("前5筆志工電話：", registered_vols["phone"].head().tolist())
+                
+                # 【修正3】使用更寬鬆的比對方式
                 matching_vol = registered_vols[registered_vols["phone"] == verify_phone]
+                
+                # 如果還是找不到，嘗試更多比對方式
+                if matching_vol.empty:
+                    # 嘗試移除所有空格和特殊字元後比對
+                    verify_phone_clean = verify_phone.replace(" ", "").replace("-", "")
+                    matching_vol = registered_vols[
+                        registered_vols["phone"].str.replace(" ", "").str.replace("-", "") == verify_phone_clean
+                    ]
                 
                 if matching_vol.empty:
                     st.error("❌ 查無此手機號碼的註冊記錄，請先完成志工註冊！")
-                    st.info(" 提示：請前往志工註冊頁面完成註冊後再回來報名任務")
+                    st.info(f" 提示：您輸入的號碼是 {verify_phone}")
+                    st.info(" 請確認號碼正確，或前往志工註冊頁面完成註冊")
+                    
+                    # 顯示所有已註冊的電話號碼（遮蔽部分）供參考
+                    if len(registered_vols) > 0:
+                        masked_phones = [f"{p[:4]}****{p[-2:]}" for p in registered_vols["phone"].tolist()[:5]]
+                        st.info(f"資料庫中已註冊電話範例：{', '.join(masked_phones)}")
+                    
                     if st.button("返回列表"):
                         st.session_state["page"] = "task_list"
                         st.rerun()
                     st.stop()
                 else:
                     # 驗證成功，儲存志工資訊
-                    vol_info = matching_vol.iloc[0]
+                    # 【修正4】如果有多筆相同電話，取第一筆且 id_number = 0 的（註冊資料）
+                    if len(matching_vol) > 1:
+                        # 優先取 id_number = 0 的註冊資料
+                        registration_record = matching_vol[matching_vol["id_number"] == 0]
+                        if not registration_record.empty:
+                            vol_info = registration_record.iloc[0]
+                        else:
+                            vol_info = matching_vol.iloc[0]
+                    else:
+                        vol_info = matching_vol.iloc[0]
+                    
                     st.session_state["verified_volunteer"] = {
                         "name": str(vol_info.get("name", "")),
                         "phone": verify_phone,
@@ -277,12 +313,6 @@ if st.session_state.get("page") == "signup":
             else:
                 st.error("❌ 無法讀取資料，請稍後再試")
                 st.stop()
-        
-        if st.button("取消返回"):
-            st.session_state["page"] = "task_list"
-            st.rerun()
-        
-        st.stop()
     
     # === 階段 2: 已驗證身份，進行報名 ===
     vol_info = st.session_state["verified_volunteer"]
