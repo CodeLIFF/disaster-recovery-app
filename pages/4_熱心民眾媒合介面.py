@@ -316,23 +316,26 @@ st.subheader("🔍 篩選條件")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    time_options = ["全部時段"] + list(time_display.values())
-    selected_time = st.selectbox("工作時間", time_options)
+    time_options = list(time_display.values())
+    selected_times = st.multiselect("工作時間", time_options, placeholder="選擇時段")
 
 with col2:
-    skill_options = ["全部技能"] + list(skills_display.values())
-    selected_skill = st.selectbox("能力需求", skill_options)
+    skill_options = list(skills_display.values())
+    selected_skills = st.multiselect("能力需求", skill_options, placeholder="選擇技能")
 
 with col3:
-    resource_options = ["全部資源"] + list(resources_display.values())
-    selected_resource = st.selectbox("提供資源", resource_options)
+    resource_options = list(resources_display.values())
+    selected_resources = st.multiselect("提供資源", resource_options, placeholder="選擇資源")
 
 with col4:
-    transport_options = ["全部交通方式"] + list(transport_display.values())
-    selected_transport = st.selectbox("建議交通", transport_options)
+    transport_options = list(transport_display.values())
+    selected_transports = st.multiselect("建議交通", transport_options, placeholder="選擇交通方式")
 
 # 地址關鍵字搜尋
-keyword = st.text_input("🔍 地址關鍵字搜尋")
+keyword = st.text_input("🔍 地址關鍵字搜尋", placeholder="輸入地址關鍵字")
+
+# 搜尋按鈕
+search_button = st.button("🔍 開始搜尋", type="primary", use_container_width=False)
 
 # 反向映射字典（從顯示文字找回原始 key）
 time_reverse = {v: k for k, v in time_display.items()}
@@ -340,43 +343,49 @@ skills_reverse = {v: k for k, v in skills_display.items()}
 resources_reverse = {v: k for k, v in resources_display.items()}
 transport_reverse = {v: k for k, v in transport_display.items()}
 
-# 開始過濾
+# 初始化過濾結果
 filtered_missions = missions.copy()
 
-# 過濾工作時間
-if selected_time != "全部時段":
-    time_key = time_reverse[selected_time]
-    filtered_missions = filtered_missions[
-        filtered_missions["work_time"].str.contains(time_key, case=False, na=False)
-    ]
+# 只有按下搜尋按鈕或有任何選項時才進行過濾
+if search_button or selected_times or selected_skills or selected_resources or selected_transports or keyword:
+    # 過濾工作時間（OR 邏輯：符合任一選項即可）
+    if selected_times:
+        time_keys = [time_reverse[t] for t in selected_times]
+        time_filter = filtered_missions["work_time"].apply(
+            lambda x: any(key in str(x) for key in time_keys)
+        )
+        filtered_missions = filtered_missions[time_filter]
 
-# 過濾技能
-if selected_skill != "全部技能":
-    skill_key = skills_reverse[selected_skill]
-    filtered_missions = filtered_missions[
-        filtered_missions["skills"].str.contains(skill_key, case=False, na=False)
-    ]
+    # 過濾技能（OR 邏輯：符合任一選項即可）
+    if selected_skills:
+        skill_keys = [skills_reverse[s] for s in selected_skills]
+        skill_filter = filtered_missions["skills"].apply(
+            lambda x: any(key in str(x) for key in skill_keys)
+        )
+        filtered_missions = filtered_missions[skill_filter]
 
-# 過濾資源
-if selected_resource != "全部資源":
-    resource_key = resources_reverse[selected_resource]
-    filtered_missions = filtered_missions[
-        filtered_missions["resources"].str.contains(resource_key, case=False, na=False)
-    ]
+    # 過濾資源（OR 邏輯：符合任一選項即可）
+    if selected_resources:
+        resource_keys = [resources_reverse[r] for r in selected_resources]
+        resource_filter = filtered_missions["resources"].apply(
+            lambda x: any(key in str(x) for key in resource_keys)
+        )
+        filtered_missions = filtered_missions[resource_filter]
 
-# 過濾交通方式
-if selected_transport != "全部交通方式":
-    transport_key = transport_reverse[selected_transport]
-    filtered_missions = filtered_missions[
-        filtered_missions["transport"].str.contains(transport_key, case=False, na=False)
-    ]
+    # 過濾交通方式（OR 邏輯：符合任一選項即可）
+    if selected_transports:
+        transport_keys = [transport_reverse[t] for t in selected_transports]
+        transport_filter = filtered_missions["transport"].apply(
+            lambda x: any(key in str(x) for key in transport_keys)
+        )
+        filtered_missions = filtered_missions[transport_filter]
 
-# 過濾地址關鍵字
-if keyword:
-    k = keyword.strip()
-    filtered_missions = filtered_missions[
-        filtered_missions["address"].str.contains(k, case=False, na=False)
-    ]
+    # 過濾地址關鍵字
+    if keyword:
+        k = keyword.strip()
+        filtered_missions = filtered_missions[
+            filtered_missions["address"].str.contains(k, case=False, na=False)
+        ]
 
 st.write(f"共 {len(filtered_missions)} 筆需求")
 st.markdown("---")
