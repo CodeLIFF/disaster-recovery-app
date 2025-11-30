@@ -149,12 +149,12 @@ st.title("受災戶需求表單")
 st.write("請依步驟完成：先驗證身分 → 再驗證地址 → 通過後填寫／更新詳細需求。")
 
 # ================== 第一步：驗證基本資料 ================== #
-st.subheader("① 🧍‍♀️ 身分驗證 identity verification")
+st.subheader("①  身分驗證 identity verification")
 
-name = st.text_input("👤 姓名 name（需與「基本資料表單」一致）", key="victim_name")
-phone = st.text_input("📞 電話 phone number（需與「基本資料表單」一致）", key="victim_phone")
+name = st.text_input(" 姓名 name（需與「基本資料表單」一致）", key="victim_name")
+phone = st.text_input(" 電話 phone number（需與「基本資料表單」一致）", key="victim_phone")
 
-if st.button("🔍 驗證基本資料 verify"):
+if st.button(" 驗證基本資料 verify"):
     if not name or not phone:
         st.error("❌ 姓名與電話為必填，且需與「基本資料表單」一致")
         st.session_state["victim_verified"] = False
@@ -186,7 +186,7 @@ if not st.session_state["victim_verified"]:
 st.markdown("---")
 
 # ================== 第二步：地址驗證 ================== #
-st.subheader("② 📍 地址驗證 address verification")
+st.subheader("②  地址驗證 address verification")
 
 address_input = st.text_input(
     "🏠 通訊 / 受災地址（address，必填）",
@@ -195,7 +195,7 @@ address_input = st.text_input(
     help=f"目前僅限災區：{ALLOWED_REGION}，地址需包含此縣市名稱。",
 )
 
-if st.button("📍 驗證地址 verify"):
+if st.button(" 驗證地址 verify"):
     err = validate_address(address_input, ALLOWED_REGION)
     if err:
         st.error(err)
@@ -263,7 +263,7 @@ prev_note = str(prev.get("note", "") or "")
 st.subheader("③ 📋 填寫／更新今日的受災需求")
 
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
-st.markdown("#### 📝 任務名稱 task name（可留白）")
+st.markdown("####  任務名稱 task name（可留白）")
 
 mission_name = st.text_input(
     "任務名稱 task name",        # 這個 label 不會顯示出來，因為我們把它 collapse 掉了
@@ -276,10 +276,10 @@ mission_name = st.text_input(
 # 工作時間：多選（預設為上一筆設定）
 st.markdown("#### ⏰ 需要協助的時間 available time（必填，可複選）")
 time_options = {
-    "🌅 早上 (08:00–11:00)": "morning",
-    "🌞 中午 (11:00–13:00)": "noon",
-    "🌇 下午 (13:00–17:00)": "afternoon",
-    "🌃 晚上 (17:00–19:00)": "night",
+    " 早上 (08:00–11:00)": "morning",
+    " 中午 (11:00–13:00)": "noon",
+    " 下午 (13:00–17:00)": "afternoon",
+    " 晚上 (17:00–19:00)": "night",
 }
 default_time_labels = [
     label for label, code in time_options.items() if code in prev_work_codes
@@ -319,14 +319,14 @@ uploaded_photo = st.file_uploader(
 st.markdown("---")
 
 # 提供資源 resources：多選 + 其他（預設上一筆）
-st.markdown("#### 📦 可提供的資源 available resources（必填，可複選）")
-res_tool = st.checkbox("🛠 工具 tools", value=("tool" in res_tokens_set))
-res_food = st.checkbox("🍱 食物 food", value=("food" in res_tokens_set))
-res_water = st.checkbox("🚰 水 water", value=("water" in res_tokens_set))
-res_med = st.checkbox("💊 醫療用品 medical supplies", value=("medical supplies" in res_tokens_set))
-res_hygiene = st.checkbox("🧻 衛生用品 hygiene supplies", value=("hygiene supplies" in res_tokens_set))
-res_accommodation = st.checkbox("🏠 住宿 accommodation", value=("accommodation" in res_tokens_set))
-res_other = st.checkbox("➕ 其他 other resources", value=bool(res_other_text_default))
+st.markdown("####  可提供的資源 available resources（必填，可複選）")
+res_tool = st.checkbox(" 工具 tools", value=("tool" in res_tokens_set))
+res_food = st.checkbox(" 食物 food", value=("food" in res_tokens_set))
+res_water = st.checkbox(" 水 water", value=("water" in res_tokens_set))
+res_med = st.checkbox(" 醫療用品 medical supplies", value=("medical supplies" in res_tokens_set))
+res_hygiene = st.checkbox(" 衛生用品 hygiene supplies", value=("hygiene supplies" in res_tokens_set))
+res_accommodation = st.checkbox(" 住宿 accommodation", value=("accommodation" in res_tokens_set))
+res_other = st.checkbox(" 其他 other resources", value=bool(res_other_text_default))
 
 res_other_text = st.text_input(
     "請說明其他資源",
@@ -335,13 +335,13 @@ res_other_text = st.text_input(
 )
 
 # 能力需求 skills：多選 + 其他（預設上一筆）
-st.markdown("#### 💪 希望志工具備的能力 desired skills（必填，可複選）")
-sk_supplies = st.checkbox("📦 物資發放 supplies distribution", value=("supplies distribution" in sk_tokens_set))
-sk_cleaning = st.checkbox("🧹 清掃 cleaning", value=("cleaning" in sk_tokens_set))
-sk_medical = st.checkbox("🩺 醫療 medical", value=("medical" in sk_tokens_set))
-sk_lifting = st.checkbox("🏋️ 搬運 heavy lifting", value=("heavy lifting" in sk_tokens_set))
-sk_license = st.checkbox("🚗 駕照 driver's license", value=("driver's license" in sk_tokens_set))
-sk_other = st.checkbox("✨ 其他 other skills", value=bool(sk_other_text_default))
+st.markdown("####  希望志工具備的能力 desired skills（必填，可複選）")
+sk_supplies = st.checkbox(" 物資發放 supplies distribution", value=("supplies distribution" in sk_tokens_set))
+sk_cleaning = st.checkbox(" 清掃 cleaning", value=("cleaning" in sk_tokens_set))
+sk_medical = st.checkbox(" 醫療 medical", value=("medical" in sk_tokens_set))
+sk_lifting = st.checkbox(" 搬運 heavy lifting", value=("heavy lifting" in sk_tokens_set))
+sk_license = st.checkbox(" 駕照 driver's license", value=("driver's license" in sk_tokens_set))
+sk_other = st.checkbox(" 其他 other skills", value=bool(sk_other_text_default))
 
 sk_other_text = st.text_input(
     "請說明其他能力需求",
@@ -350,13 +350,13 @@ sk_other_text = st.text_input(
 )
 
 # 建議交通方式 transport：多選 + 其他（預設上一筆）
-st.markdown("#### 🚗 建議交通方式 suggested transportation（必填，可複選）")
-tr_train = st.checkbox("🚆 火車 train", value=("train" in tr_tokens_set))
-tr_bus = st.checkbox("🚌 巴士 bus", value=("bus" in tr_tokens_set))
-tr_walk = st.checkbox("🚶‍♀️ 步行 on foot", value=("walk" in tr_tokens_set))
-tr_car = st.checkbox("🚗 開車 car", value=("car" in tr_tokens_set))
-tr_scooter = st.checkbox("🛵 機車 scooter", value=("scooter" in tr_tokens_set))
-tr_bike = st.checkbox("🚲 腳踏車 bike", value=("bike" in tr_tokens_set))
+st.markdown("####  建議交通方式 suggested transportation（必填，可複選）")
+tr_train = st.checkbox(" 火車 train", value=("train" in tr_tokens_set))
+tr_bus = st.checkbox(" 巴士 bus", value=("bus" in tr_tokens_set))
+tr_walk = st.checkbox(" 步行 on foot", value=("walk" in tr_tokens_set))
+tr_car = st.checkbox(" 開車 car", value=("car" in tr_tokens_set))
+tr_scooter = st.checkbox(" 機車 scooter", value=("scooter" in tr_tokens_set))
+tr_bike = st.checkbox(" 腳踏車 bike", value=("bike" in tr_tokens_set))
 tr_other = st.checkbox("➕ 其他 other transportation", value=bool(tr_other_text_default))
 
 tr_other_text = st.text_input(
