@@ -216,122 +216,201 @@ else:
 
 # --- 步驟 B: 處理報名頁面 (Signup Page) ---
 if st.session_state.get("page") == "signup":
-    st.title("📝 志工基本資料填寫")
+    st.title(" 志工身份驗證")
     
-    with st.form("signup_form"):
-        st.info("感謝您的熱心！請填寫資料以完成報名。")
-        name = st.text_input("姓名（必填）")
-        phone = st.text_input("電話（必填，09開頭）")
-        line_id = st.text_input("LINE ID（選填）")
-        submitted = st.form_submit_button("確認送出")
-
-    if submitted:
-        # --- 1. 基礎格式驗證 ---
-        if not name or not phone:
-            st.warning("❌ 請完整填寫姓名與電話")
-            st.stop()
-        if not (phone.isdigit() and len(phone) == 10 and phone.startswith("09")):
-            st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
-            st.stop()
-            
-        task_id = st.session_state.get("selected_task_id")
+    # === 階段 1: 驗證身份（檢查是否已註冊） ===
+    if "verified_volunteer" not in st.session_state:
+        st.info("請先驗證您的志工身份（需先在系統中註冊）")
         
-        # --- 2. 定義手機號碼標準化函式 (讀取用) ---
-        def normalize_phone(p):
-            p = str(p).strip()
-            # 如果是 9 開頭且長度為 9 (代表 0 被 Google 吃掉了)，補回 0
-            if len(p) == 9 and p.startswith("9"):
-                return "0" + p
-            return p
-
-        # --- 3. 強制即時檢查 (讀取 + 標準化) ---
-        load_data.clear()  # 清除快取
-        df_fresh = load_data() # 重新抓最新資料
+        with st.form("verify_form"):
+            verify_phone = st.text_input("請輸入您註冊時的手機號碼（09開頭）")
+            verify_submit = st.form_submit_button("驗證身份")
         
-        if not df_fresh.empty and "role" in df_fresh.columns:
-            # 針對讀回來的資料，先做一次「補 0」動作，確保格式一致
-            df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
+        if verify_submit:
+            # 基礎格式驗證
+            if not verify_phone:
+                st.warning("❌ 請輸入手機號碼")
+                st.stop()
+            if not (verify_phone.isdigit() and len(verify_phone) == 10 and verify_phone.startswith("09")):
+                st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
+                st.stop()
             
-            vols_fresh = df_fresh[df_fresh["role"] == "volunteer"]
+            # 定義手機號碼標準化函式
+            def normalize_phone(p):
+                p = str(p).strip()
+                if len(p) == 9 and p.startswith("9"):
+                    return "0" + p
+                return p
             
-            # 檢查是否已報名此任務 (現在格式統一了，比對就會準確)
-            is_duplicate = not vols_fresh[
-                (vols_fresh["phone"] == phone) & 
-                (vols_fresh["id_number"] == int(task_id))
-            ].empty
+            # 重新讀取最新資料
+            load_data.clear()
+            df_fresh = load_data()
             
-            if is_duplicate:
-                st.error("❌ 您已經報名過此任務，請勿重複提交！")
-                if st.button("返回列表", key="dup_back"):
+            if not df_fresh.empty:
+                df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
+                
+                # 檢查是否為已註冊的志工（role = "volunteer" 且沒有 id_number，代表是純註冊資料）
+                registered_vols = df_fresh[
+                    (df_fresh["role"] == "volunteer") & 
+                    (df_fresh["id_number"] == 0)  # id_number = 0 代表是註冊資料，不是報名記錄
+                ]
+                
+                matching_vol = registered_vols[registered_vols["phone"] == verify_phone]
+                
+                if matching_vol.empty:
+                    st.error("❌ 查無此手機號碼的註冊記錄，請先完成志工註冊！")
+                    st.info(" 提示：請前往志工註冊頁面完成註冊後再回來報名任務")
+                    if st.button("返回列表"):
+                        st.session_state["page"] = "task_list"
+                        st.rerun()
+                    st.stop()
+                else:
+                    # 驗證成功，儲存志工資訊
+                    vol_info = matching_vol.iloc[0]
+                    st.session_state["verified_volunteer"] = {
+                        "name": str(vol_info.get("name", "")),
+                        "phone": verify_phone,
+                        "line_id": str(vol_info.get("line_id", ""))
+                    }
+                    st.success(f"✅ 驗證成功！歡迎 {vol_info.get('name', '志工')}！")
+                    st.rerun()
+            else:
+                st.error("❌ 無法讀取資料，請稍後再試")
+                st.stop()
+        
+        if st.button("取消返回"):
+            st.session_state["page"] = "task_list"
+            st.rerun()
+        
+        st.stop()
+    
+    # === 階段 2: 已驗證身份，進行報名 ===
+    vol_info = st.session_state["verified_volunteer"]
+    task_id = st.session_state.get("selected_task_id")
+    
+    st.success(f"✅ 已驗證身份：{vol_info['name']} ({vol_info['phone']})")
+    st.info("請確認報名資訊")
+    
+    # 定義手機號碼標準化函式
+    def normalize_phone(p):
+        p = str(p).strip()
+        if len(p) == 9 and p.startswith("9"):
+            return "0" + p
+        return p
+    
+    # 重新檢查是否已報名此任務
+    load_data.clear()
+    df_fresh = load_data()
+    
+    if not df_fresh.empty:
+        df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
+        
+        # 找出所有報名記錄（id_number > 0 代表是報名某個任務）
+        signup_records = df_fresh[
+            (df_fresh["role"] == "volunteer") & 
+            (df_fresh["id_number"] > 0)
+        ]
+        
+        # 檢查此志工是否已報名此任務
+        is_duplicate = not signup_records[
+            (signup_records["phone"] == vol_info["phone"]) & 
+            (signup_records["id_number"] == int(task_id))
+        ].empty
+        
+        if is_duplicate:
+            st.error("❌ 您已經報名過此任務，請勿重複報名！")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("返回列表"):
+                    del st.session_state["verified_volunteer"]
                     st.session_state["page"] = "task_list"
                     st.rerun()
-                st.stop()
-
-        # --- 4. 寫入資料 (強制保留 0)，並將該任務對應的受災戶聯絡資訊與提示一併寫入同一列（最後一欄）
-        try:
-            # 【關鍵修改】在 phone 前面加上 "'" (單引號)
-            # 這會告訴 Google Sheets：「這是文字，不要把它變成數字！」
-            phone_to_write = "'" + phone 
-
-            # 先從剛抓回來的 df_fresh 找出該任務的受災戶資料（若有）
-            victim_name = ""
-            victim_phone = ""
-            victim_line = ""
-            victim_note = ""
-            if not df_fresh.empty:
-                victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
-                if not victim_rows.empty:
-                    vr = victim_rows.iloc[0]
-                    victim_name = str(vr.get("name", "")).strip()
-                    # 可能也要標準化 victim phone（如果 Google 吃掉 0）
-                    victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
-                    victim_line = str(vr.get("line_id", "")).strip()
-                    victim_note = str(vr.get("note", "")).strip()
-            
-            # 建立分行顯示的 contact_note（多行字串）
-            if victim_name or victim_phone or victim_line or victim_note:
-                contact_note = f"""這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!
+            with col2:
+                if st.button("報名其他任務"):
+                    del st.session_state["verified_volunteer"]
+                    st.session_state["page"] = "task_list"
+                    st.rerun()
+            st.stop()
+    
+    # 顯示任務資訊
+    if not df_fresh.empty:
+        task_info = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+        if not task_info.empty:
+            task = task_info.iloc[0]
+            st.markdown("### 報名任務資訊")
+            st.write(f"**任務名稱：** {task.get('mission_name', '未命名任務')}")
+            st.write(f"**地址：** {task.get('address', '')}")
+            st.write(f"**工作時間：** {task.get('work_time', '')}")
+    
+    # 確認報名按鈕
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("✅ 確認報名", type="primary", use_container_width=True):
+            try:
+                # 準備寫入資料
+                phone_to_write = "'" + vol_info["phone"]
+                
+                # 取得受災戶聯絡資訊
+                victim_name = ""
+                victim_phone = ""
+                victim_line = ""
+                victim_note = ""
+                
+                if not df_fresh.empty:
+                    victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+                    if not victim_rows.empty:
+                        vr = victim_rows.iloc[0]
+                        victim_name = str(vr.get("name", "")).strip()
+                        victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
+                        victim_line = str(vr.get("line_id", "")).strip()
+                        victim_note = str(vr.get("note", "")).strip()
+                
+                # 建立聯絡資訊
+                if victim_name or victim_phone or victim_line or victim_note:
+                    contact_note = f"""這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!
 受災戶姓名：{victim_name}
 電話：{victim_phone}
 LineID：{victim_line}
 備註：{victim_note}"""
-            else:
-                contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
-            
-            # 構造要寫入的 row：保留原本欄位數量的基礎上，把 contact_note 放在最後一欄（若你有固定欄位結構，可對應修改）
-            row_data = [
-                int(task_id), "volunteer", name, phone_to_write, line_id,
-                "", "", "", "", "", "", contact_note
-            ]
-            sheet.append_row(row_data)
-            
-            # 更新 Session（但不要立刻 rerun/返回，先讓使用者看到訊息）
-            st.session_state["user_phone"] = phone
-            st.session_state["my_new_tasks"].append(task_id)
-            load_data.clear()
-            
-            # 顯示成功訊息與聯絡資訊，並提供「返回列表」按鈕由使用者自行點擊以回到列表（避免訊息閃過）
-            st.success("🎉 報名成功！")
-            # 使用 st.markdown 以保留換行顯示（info 也可，但 markdown 更靈活）
-            st.markdown(f"```\n{contact_note}\n```")
-            st.write("")  # 空行做些間距
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button("返回列表"):
+                else:
+                    contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
+                
+                # 寫入報名記錄
+                row_data = [
+                    int(task_id), "volunteer", vol_info["name"], phone_to_write, vol_info["line_id"],
+                    "", "", "", "", "", "", contact_note
+                ]
+                sheet.append_row(row_data)
+                
+                # 更新 Session
+                st.session_state["user_phone"] = vol_info["phone"]
+                st.session_state["my_new_tasks"].append(task_id)
+                load_data.clear()
+                
+                # 顯示成功訊息
+                st.success("🎉 報名成功！")
+                st.markdown(f"```\n{contact_note}\n```")
+                
+                # 清除驗證狀態
+                del st.session_state["verified_volunteer"]
+                
+                st.write("")
+                if st.button("返回任務列表", use_container_width=True):
                     st.session_state["page"] = "task_list"
                     st.rerun()
-            with col2:
-                if st.button("留在此頁", key="stay_on_signup"):
-                    st.info("您仍停留在報名頁面，可複查資訊或按返回列表。")
-            
-        except Exception as e:
-            st.error(f"連線錯誤: {e}")
-            st.stop()
-    if st.button("取消返回"):
-        st.session_state["page"] = "task_list"
-        st.rerun()
+                
+            except Exception as e:
+                st.error(f"報名失敗: {e}")
+                st.stop()
     
-    st.stop() # 停止執行後面的程式碼
+    with col2:
+        if st.button(" 取消報名", use_container_width=True):
+            del st.session_state["verified_volunteer"]
+            st.session_state["page"] = "task_list"
+            st.rerun()
+    
+    st.stop()
 
 # --- 步驟 C: 任務列表頁面 (Task List Page) ---
 
