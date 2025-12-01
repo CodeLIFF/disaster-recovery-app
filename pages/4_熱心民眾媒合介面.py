@@ -411,13 +411,6 @@ LineID：{victim_line}
                     else:
                         contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
 
-                    # 寫入報名記錄（確保欄位數量與 Sheet 對應，若不同可調整）
-                    row_data = [
-                        int(task_id), "volunteer", vol_info["name"], phone_to_write, vol_info["line_id"],
-                        "", "", "", "", "", "", contact_note
-                    ]
-                    sheet.append_row(row_data)
-
                     # 更新 Session
                     st.session_state["user_phone"] = vol_info["phone"]
                     st.session_state["my_new_tasks"].append(int(task_id))
