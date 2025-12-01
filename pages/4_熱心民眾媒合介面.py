@@ -147,7 +147,8 @@ def load_data():
         for col in text_fields:
             if col in df.columns:
                 df[col] = df[col].fillna("").astype(str).str.strip()
-                
+        if "phone" in df.columns:# ✅ 特別處理 phone 欄位：移除單引號
+            df["phone"] = df["phone"].apply(normalize_phone)        
         return df
     except Exception as e:
         st.error(f"讀取資料失敗: {e}")
@@ -215,9 +216,26 @@ transport_display = {
 
 # 共用手機標準化函式
 def normalize_phone(p):
-    p = str(p).strip().replace("'", "")  # 移除可能的單引號
+    """
+    統一電話格式：
+    - 移除單引號 (Google Sheets 的文字前綴)
+    - 去掉空白、破折號等非數字字元
+    - 9 碼且 9 開頭則補 0
+    - 回傳標準 10 碼電話號碼
+    """
+    if p is None or p == "":
+        return ""
+    
+    # 移除單引號
+    p = str(p).strip().replace("'", "")
+    
+    # 只保留數字
+    p = re.sub(r"\D", "", p)
+    
+    # 若長度 9 且 9 開頭，補 0
     if len(p) == 9 and p.startswith("9"):
         return "0" + p
+    
     return p
 
 # ==========================================
@@ -384,7 +402,8 @@ if st.session_state.get("page") == "signup":
             if st.button("✅ 確認報名", type="primary", use_container_width=True):
                 try:
                     # 準備寫入資料
-                    phone_to_write = "'" + vol_info["phone"]
+                    phone_norm = normalize_phone(vol_info["phone"])  # ← 先標準化
+                    phone_to_write = "'" + phone_norm                # ← 再加單引號
 
                     # 取得受災戶聯絡資訊
                     victim_name = ""
