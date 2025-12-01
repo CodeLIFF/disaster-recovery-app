@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+import re  # <- 新增：normalize_phone 使用到 re
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
@@ -171,7 +172,29 @@ def load_data():
             if col in df.columns:
                 df[col] = df[col].fillna("").astype(str).str.strip()
         if "phone" in df.columns:# ✅ 特別處理 phone 欄位：移除單引號
-            df["phone"] = df["phone"].apply(normalize_phone)        
+            df["phone"] = df["phone"].apply(normalize_phone)
+
+        # ----- 新增容錯：確保後續程式會使用到的欄位都存在 -----
+        # 若缺少預期的數值欄位，補上預設 0
+        required_ints = ["id_number", "selected_worker", "demand_worker"]
+        for c in required_ints:
+            if c not in df.columns:
+                df[c] = 0
+            else:
+                # 若欄位存在但可能含 NaN 或非整數，保證型別
+                df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
+        # 若缺少預期的文字欄位，補上空字串
+        required_texts = ["phone", "line_id", "mission_name", "address", "work_time",
+                          "skills", "resources", "transport", "note", "photo", "role", "name", "other"]
+        for c in required_texts:
+            if c not in df.columns:
+                df[c] = ""
+            else:
+                df[c] = df[c].fillna("").astype(str).str.strip()
+
+        # 最後再一次標準化 phone 欄位
+        df["phone"] = df["phone"].apply(normalize_phone)
+
         return df
     except Exception as e:
         st.error(f"讀取資料失敗: {e}")
@@ -545,14 +568,15 @@ st.write(f"共 {len(filtered_missions)} 筆需求")
 st.markdown("---")
 
 # 2. 預先計算所有任務的「目前人數」 (避免在迴圈內算)
-mission_counts = volunteers["id_number"].value_counts().to_dict()
+# mission_counts 會使用 volunteers 的 id_number 欄位（load_data 已確保該欄位存在）
+mission_counts = volunteers["id_number"].value_counts().to_dict() if not volunteers.empty else {}
 
 # 3. 判斷「當前使用者」的狀態
 current_user_phone = st.session_state.get("user_phone")
 
 # 找出使用者在 Sheet 裡報名過的任務 ID
 joined_in_sheet = []
-if current_user_phone:
+if current_user_phone and not volunteers.empty:
     joined_in_sheet = volunteers[volunteers["phone"] == current_user_phone]["id_number"].tolist()
 
 # 合併「Sheet 裡的舊紀錄」和「剛按下報名的新紀錄」
