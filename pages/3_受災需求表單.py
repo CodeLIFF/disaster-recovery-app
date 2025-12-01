@@ -91,18 +91,34 @@ def load_df():
     data = ws.get_all_records()
     return pd.DataFrame(data) if data else pd.DataFrame()
 
-# 一般文字清洗：處理全形空白、前後空格
+# ---------- 工具函式 ----------
 def normalize_text(text):
     if pd.isna(text):
         return ""
     return str(text).replace("　", " ").strip()
 
-# 電話清洗：只保留數字，並拿掉開頭的 0
+
 def normalize_phone(text):
-    if pd.isna(text):
+    """
+    統一電話格式：
+    - 移除單引號
+    - 只保留數字
+    - 9 碼且 9 開頭則補 0
+    """
+    if pd.isna(text) or text == "":
         return ""
-    digits = re.sub(r"\D", "", str(text))
-    return digits.lstrip("0")
+    
+    # 移除單引號
+    s = str(text).replace("'", "").strip()
+    
+    # 只保留數字
+    digits = re.sub(r"\D", "", s)
+    
+    # 9 碼且 9 開頭則補 0
+    if len(digits) == 9 and digits.startswith("9"):
+        digits = "0" + digits
+    
+    return digits
 
 # 專門找「受災戶」那一列
 def find_victim_row(name, phone):
