@@ -537,7 +537,16 @@ if st.button("✅ 送出今日受災需求 submit"):
         "note",
         "date",
     ]
-    new_row = [row.get(col, "") for col in ordered_cols]
+   # 修正建議：針對 phone 欄位特別處理，加上單引號
+    formatted_values = []
+    for col in ordered_cols:
+        val = row.get(col, "")
+        if col == "phone" and val:
+            # 強制加上單引號，確保寫回 Sheet 時維持文字格式 (0開頭不會消失)
+            val = "'" + str(val).replace("'", "") 
+        formatted_values.append(val)
+    
+    new_row = formatted_values
 
     try:
         ws.update(f"A{row_number}:Q{row_number}", [new_row])
