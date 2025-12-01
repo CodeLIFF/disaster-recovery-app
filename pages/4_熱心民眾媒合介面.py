@@ -77,6 +77,29 @@ div[data-testid="stMultiSelect"]:nth-of-type(4) [data-baseweb="tag"] {
 
 st.markdown(css, unsafe_allow_html=True)
 
+# 共用手機標準化函式
+def normalize_phone(p):
+    """
+    統一電話格式：
+    - 移除單引號 (Google Sheets 的文字前綴)
+    - 去掉空白、破折號等非數字字元
+    - 9 碼且 9 開頭則補 0
+    - 回傳標準 10 碼電話號碼
+    """
+    if p is None or p == "":
+        return ""
+    
+    # 移除單引號
+    p = str(p).strip().replace("'", "")
+    
+    # 只保留數字
+    p = re.sub(r"\D", "", p)
+    
+    # 若長度 9 且 9 開頭，補 0
+    if len(p) == 9 and p.startswith("9"):
+        return "0" + p
+    
+    return p
 # ==========================================
 # 1. 初始化設定與連線
 # ==========================================
@@ -214,29 +237,7 @@ transport_display = {
     "other": " 其他"
 }
 
-# 共用手機標準化函式
-def normalize_phone(p):
-    """
-    統一電話格式：
-    - 移除單引號 (Google Sheets 的文字前綴)
-    - 去掉空白、破折號等非數字字元
-    - 9 碼且 9 開頭則補 0
-    - 回傳標準 10 碼電話號碼
-    """
-    if p is None or p == "":
-        return ""
-    
-    # 移除單引號
-    p = str(p).strip().replace("'", "")
-    
-    # 只保留數字
-    p = re.sub(r"\D", "", p)
-    
-    # 若長度 9 且 9 開頭，補 0
-    if len(p) == 9 and p.startswith("9"):
-        return "0" + p
-    
-    return p
+
 
 # ==========================================
 # 3. 程式主流程（以 page 控制，點「我要報名」會切換到 signup）
