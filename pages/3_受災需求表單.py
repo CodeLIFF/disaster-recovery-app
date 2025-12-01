@@ -519,11 +519,6 @@ if st.button("✅ 送出今日受災需求 submit"):
     update_field("date", date_str)
 
     ordered_cols = [
-        "id_number",
-        "role",
-        "name",
-        "phone",
-        "line_id",
         "mission_name",
         "address",
         "work_time",
@@ -549,7 +544,7 @@ if st.button("✅ 送出今日受災需求 submit"):
     new_row = formatted_values
 
     try:
-        ws.update(f"A{row_number}:Q{row_number}", [new_row])
+        ws.update(f"F{row_number}:Q{row_number}", [new_row])
         st.success("✅ 已成功更新您『今天』的受災需求資料！")
         st.info("若明天需求有變化，可以再次進入本表單，只需調整有改變的項目即可。")
     except Exception as e:
