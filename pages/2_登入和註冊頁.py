@@ -118,7 +118,7 @@ if st.button("送出基本資料 submit"):
                 id_number,        # id_number
                 role,             # role
                 name.strip(),     # name
-                "'"phone_norm,       # phone（用標準化後的）
+                "'"+phone_norm,       # phone（用標準化後的）
                 line_id.strip(),  # line_id
                 "",               # mission_name
                 "",               # address
