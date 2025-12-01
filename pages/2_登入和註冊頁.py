@@ -20,19 +20,27 @@ ws = gc.open_by_key(SHEET_ID).worksheet("vol")  # tab 名稱是 vol
 
 # ---------- 工具函式：電話標準化 ----------
 def normalize_phone(s: str) -> str:
-    """把電話轉成統一格式：去空白、去非數字、補 0、回傳字串"""
-    if s is None:
+    """
+    統一電話格式：
+    - 移除單引號 (Google Sheets 的文字前綴)
+    - 去掉空白、破折號等非數字字元
+    - 9 碼且 9 開頭則補 0
+    - 回傳標準 10 碼電話號碼
+    """
+    if s is None or s == "":
         return ""
-
-    # 去掉空白、dash 等
-    s = re.sub(r"\D", "", str(s))
-
-    # 若長度 9 且是 9 開頭（例如 989300198），視為手機，補一個 0
+    
+    # 移除單引號 (Google Sheets 的文字格式前綴)
+    s = str(s).replace("'", "").strip()
+    
+    # 只保留數字
+    s = re.sub(r"\D", "", s)
+    
+    # 若長度 9 且 9 開頭，補 0
     if len(s) == 9 and s.startswith("9"):
         s = "0" + s
-
+    
     return s
-
 
 # ---------- 取得下一個 id_number ----------
 def get_next_id_number():
