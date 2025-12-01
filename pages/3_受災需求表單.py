@@ -5,6 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import re
 import io
+from datetime import datetime, timedelta, timezone
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from supabase import create_client, Client
@@ -485,6 +486,11 @@ if st.button("✅ 送出今日受災需求 submit"):
     if not transport_list:
         st.error("❌ 請至少勾選一項『建議交通方式』。Choose at least one suggested transportion.")
         st.stop()
+        
+    # 🔹 這裡開始新增：取得台灣時間（UTC+8）
+    taiwan_tz = timezone(timedelta(hours=8))
+    now_tw = datetime.now(taiwan_tz)
+    date_str = now_tw.strftime("%Y-%m-%d %H:%M")   # 如果只想要日期可以用 "%Y-%m-%d"
 
     row = row_series.to_dict()
 
@@ -510,6 +516,7 @@ if st.button("✅ 送出今日受災需求 submit"):
     update_field("photo", photo_to_save)
     update_field("transport", transport_str)
     update_field("note", note.strip() if note else "")
+    update_field("date", date_str)
 
     ordered_cols = [
         "id_number",
@@ -528,11 +535,12 @@ if st.button("✅ 送出今日受災需求 submit"):
         "photo",
         "transport",
         "note",
+        "date",
     ]
     new_row = [row.get(col, "") for col in ordered_cols]
 
     try:
-        ws.update(f"A{row_number}:P{row_number}", [new_row])
+        ws.update(f"A{row_number}:Q{row_number}", [new_row])
         st.success("✅ 已成功更新您『今天』的受災需求資料！")
         st.info("若明天需求有變化，可以再次進入本表單，只需調整有改變的項目即可。")
     except Exception as e:
