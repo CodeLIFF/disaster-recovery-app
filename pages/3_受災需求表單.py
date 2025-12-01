@@ -207,7 +207,7 @@ st.markdown("---")
 st.subheader("②  地址驗證 address verification")
 
 address_input = st.text_input(
-    "🏠 通訊 / 受災地址（address，必填）",
+    " 通訊 / 受災地址（address，必填）",
     value=st.session_state.get("address_value", ""),
     placeholder=f"請填寫完整地址，例如：{ALLOWED_REGION}○○鄉○○村○○路○號",
     help=f"目前僅限災區：{ALLOWED_REGION}，地址需包含此縣市名稱。",
@@ -281,7 +281,7 @@ prev_note = str(prev.get("note", "") or "")
 st.subheader("③  填寫／更新今日的受災需求")
 
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
-st.markdown("#### 📋 任務名稱 task name（可留白）")
+st.markdown("####  任務名稱 task name（可留白）")
 
 mission_name = st.text_input(
     "任務名稱 task name",        # 這個 label 不會顯示出來，因為我們把它 collapse 掉了
@@ -292,7 +292,7 @@ mission_name = st.text_input(
 )
 
 # 工作時間：多選（預設為上一筆設定）
-st.markdown("#### ⏰ 需要協助的時間 available time（必填，可複選）")
+st.markdown("####  需要協助的時間 available time（必填，可複選）")
 time_options = {
     " 早上 (08:00–11:00)": "morning",
     " 中午 (11:00–13:00)": "noon",
@@ -310,7 +310,7 @@ selected_time_labels = st.multiselect(
 selected_time_codes = [time_options[label] for label in selected_time_labels]
 
 # 人力需求：標題 + 數字輸入
-st.markdown("#### 👥 總人數需求 required number of people（必填，上限 20人）")
+st.markdown("####  總人數需求 required number of people（必填，上限 20人）")
 
 demand_worker = st.number_input(
     "總人數需求 required number of people",
@@ -448,7 +448,7 @@ if st.button("✅ 送出今日受災需求 submit"):
         st.error("❌ 請先完成『地址驗證』。")
         st.stop()
 
-    row_number, row_series = find_victim_row(name, phone)
+    
     if row_number is None:
         st.error("❌ 找不到您的基本資料。請重新確認。")
         st.stop()
