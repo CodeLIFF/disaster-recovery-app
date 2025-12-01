@@ -53,7 +53,8 @@ def get_next_id_number():
     return (max(nums) + 1) if nums else 1
 
 
-# ---------- 查重（同 role + name + phone 視為同一人） ----------
+# ---------- 查重 ----------
+# ✅ 這裡改成「同一個 role 下，只要 phone 一樣就視為重複」
 def is_duplicate(role: str, name: str, phone: str) -> bool:
     data = ws.get_all_records()
     if not data:
@@ -63,18 +64,13 @@ def is_duplicate(role: str, name: str, phone: str) -> bool:
 
     # 統一格式：全部轉成字串＋strip
     df["role"] = df["role"].astype(str).str.strip().str.lower()
-    df["name"] = df["name"].astype(str).str.strip()
     df["phone"] = df["phone"].astype(str).apply(normalize_phone)
 
     role_norm = role.strip().lower()
-    name_norm = name.strip()
     phone_norm = normalize_phone(phone)
 
-    mask = (
-        (df["role"] == role_norm)
-        & (df["name"] == name_norm)
-        & (df["phone"] == phone_norm)
-    )
+    # 🟡 不再用 name 判斷，只看「同一個 role + phone」
+    mask = (df["role"] == role_norm) & (df["phone"] == phone_norm)
     return mask.any()
 
 
@@ -108,9 +104,12 @@ if st.button("送出基本資料 submit"):
     elif len(phone_norm) != 10:
         st.error("❌ 電話格式應為 10 位數字，請修正後再送出。")
     else:
-        # 2️⃣ 查重：同 role + name + phone 已存在就擋掉
+        # 2️⃣ 查重：同 role + phone 已存在就擋掉
         if is_duplicate(role, name, phone_norm):
-            st.warning("⚠ 已有相同身分＋姓名＋電話的紀錄，請不要重複註冊。")
+            if role == "victim":
+                st.warning("⚠ 這支電話已經註冊為『受災戶 victim』，請不要重複註冊。")
+            else:
+                st.warning("⚠ 這支電話已經註冊為『志工 volunteer』，請不要重複註冊。")
         else:
             # 3️⃣ 新增一個 id_number
             id_number = get_next_id_number()
