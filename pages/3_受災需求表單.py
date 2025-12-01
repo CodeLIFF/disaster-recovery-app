@@ -490,7 +490,7 @@ if st.button("✅ 送出今日受災需求 submit"):
     # 🔹 這裡開始新增：取得台灣時間（UTC+8）
     taiwan_tz = timezone(timedelta(hours=8))
     now_tw = datetime.now(taiwan_tz)
-    date_str = now_tw.strftime("%Y-%m-%d %H:%M")   # 如果只想要日期可以用 "%Y-%m-%d"
+    date_str = now_tw.strftime("%Y-%m-%d")   # 如果只想要日期可以用 "%Y-%m-%d"
 
     row = row_series.to_dict()
 
