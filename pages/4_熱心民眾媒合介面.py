@@ -487,10 +487,14 @@ LineID：{victim_line}
                     st.success("🎉 報名成功！")
                     st.markdown(f"```\n{contact_note}\n```")
 
-                    # 清除驗證狀態並回任務列表
-                    del st.session_state["verified_volunteer"]
+                    # 清除驗證狀態
+                    if "verified_volunteer" in st.session_state:
+                        del st.session_state["verified_volunteer"]
+                    
+                    # 回任務列表按鈕
                     if st.button("返回任務列表", use_container_width=True):
                         st.session_state["page"] = "task_list"
+                        load_data.clear()
                         safe_rerun()
 
                 except Exception as e:
@@ -649,14 +653,10 @@ for idx, row in filtered_missions.iterrows():
         st.markdown(f" 備註： {row['note']}")
 
         # 把「已報名志工」移到備註下方顯示（如有）
-        task_vols = volunteers[volunteers["id_number"] == tid]
-        if not task_vols.empty:
-            vols_display = []
-            for _, v in task_vols.iterrows():
-                v_phone = str(v.get('phone', ''))
-                show_phone = v_phone[-3:] if len(v_phone) >= 3 else ""
-                vols_display.append(f"{v.get('name','匿名')} ({show_phone})")
-            st.markdown("**已報名志工：** " + "、".join(vols_display))
+        acc_text = str(row.get("accepted_volunteers", "")).strip()
+        if acc_text:
+            st.markdown("**已報名志工：**")
+            st.markdown(acc_text.replace("\n", "、"))
 
         # --- 按鈕邏輯 ---
         is_full = current_count >= row["demand_worker"]
