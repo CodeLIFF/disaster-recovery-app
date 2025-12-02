@@ -429,6 +429,47 @@ if st.session_state.get("page") == "signup":
                     phone_norm = normalize_phone(vol_info["phone"])  # ← 先標準化
                     phone_to_write = "'" + phone_norm                # ← 再加單引號
 
+                    # 1. 寫入 Google Sheet ：新增一筆報名紀錄
+                    new_row = [
+                        vol_info["name"],          # 姓名
+                        phone_to_write,            # 電話（保留單引號）
+                        vol_info.get("line_id", ""),  # Line ID
+                        int(task_id),              # id_number = 報名的任務 ID
+                        "volunteer"                # role
+                    ]
+                    # 插入到最末行下方
+                    sheet.append_row(new_row, value_input_option="USER_ENTERED")
+
+                    # 1️⃣ 更新任務已報名人數 selected_worker +1
+                    task_row_idx = df_fresh[df_fresh["id_number"] == int(task_id)].index[0] + 2
+                    selected_col = df_fresh.columns.get_loc("selected_worker") + 1
+                    current_count_in_sheet = int(df_fresh.at[task_row_idx-2, "selected_worker"])
+                    sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
+                    
+                    # 2️⃣ 更新已報名志工名單（accepted_volunteers）
+                    acc_col = df_fresh.columns.get_loc("accepted_volunteers") + 1
+                    existing = str(df_fresh.at[task_row_idx-2, "accepted_volunteers"]).strip()
+                    
+                    # UI顯示姓名 + 手機後3碼
+                    v_name = vol_info["name"]
+                    v_phone = normalize_phone(vol_info["phone"])
+                    show_phone = v_phone[-3:] if len(v_phone) >= 3 else ""
+                    new_entry = f"{v_name}({show_phone})"
+                    
+                    # 允許多位換行累加
+                    if existing:
+                        updated_val = existing + "\n" + new_entry
+                    else:
+                        updated_val = new_entry
+                    
+                    sheet.update_cell(task_row_idx, acc_col, updated_val)
+        
+                    # 2. 清快取，強制重新讀取最新資料
+                    load_data.clear()
+        
+                    # 3. UI 立即更新（重新顯示正確人數）
+                    safe_rerun()
+
                     # 取得受災戶聯絡資訊
                     victim_name = ""
                     victim_phone = ""
