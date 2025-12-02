@@ -449,15 +449,6 @@ if st.session_state.get("page") == "signup":
                     # 更新報名志工顯示欄位
                     sheet.update_cell(task_row_idx, acc_col, updated_val)
                 
-                    # 加一筆報名紀錄至尾端
-                    phone_to_write = "'" + phone_norm  # 作為文字寫入
-                    new_row = [
-                        int(task_id), "volunteer", vol_info["name"], phone_to_write,
-                        vol_info.get("line_id", ""),
-                        "", "", "", "", "", "", "", "", "", "", ""
-                    ]
-                    sheet.append_row(new_row, value_input_option="USER_ENTERED")
-                
                     # 強制重新載入、刷新 UI
                     load_data.clear()
                     safe_rerun()
