@@ -424,10 +424,43 @@ if st.session_state.get("page") == "signup":
 
         with col1:
             if st.button("✅ 確認報名", type="primary", use_container_width=True):
+
                 try:
-                    # 準備寫入資料
-                    phone_norm = normalize_phone(vol_info["phone"])  # ← 先標準化
-                    phone_to_write = "'" + phone_norm                # ← 再加單引號
+                    # 找到任務所在行
+                    task_row_idx = df_fresh[df_fresh["id_number"] == int(task_id)].index[0] + 2
+                    selected_col = df_fresh.columns.get_loc("selected_worker") + 1
+                    acc_col = df_fresh.columns.get_loc("accepted_volunteers") + 1
+                
+                    # 最新資料
+                    current_count_in_sheet = int(df_fresh.loc[df_fresh["id_number"] == int(task_id),
+                                                             "selected_worker"].iloc[0])
+                
+                    existing = df_fresh.loc[df_fresh["id_number"] == int(task_id),
+                                           "accepted_volunteers"].iloc[0]
+                    existing = existing if existing else ""
+                
+                    # 新增累積文字
+                    phone_norm = normalize_phone(vol_info["phone"])
+                    new_entry = f"{vol_info['name']}({phone_norm[-3:]})"
+                    updated_val = (existing + "\n" + new_entry).strip()
+                
+                    # 更新人數
+                    sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
+                    # 更新報名志工顯示欄位
+                    sheet.update_cell(task_row_idx, acc_col, updated_val)
+                
+                    # 加一筆報名紀錄至尾端
+                    phone_to_write = "'" + phone_norm  # 作為文字寫入
+                    new_row = [
+                        int(task_id), "volunteer", vol_info["name"], phone_to_write,
+                        vol_info.get("line_id", ""),
+                        "", "", "", "", "", "", "", "", "", "", ""
+                    ]
+                    sheet.append_row(new_row, value_input_option="USER_ENTERED")
+                
+                    # 強制重新載入、刷新 UI
+                    load_data.clear()
+                    safe_rerun()
 
                     # 1. 寫入 Google Sheet ：新增一筆報名紀錄
                     new_row = [
@@ -439,13 +472,7 @@ if st.session_state.get("page") == "signup":
                         "", "", "", "",        # mission fields: 留空
                         "", "", "", "", "", "" # 剩下欄位通通留空
                     ]
-
-                   # 1️⃣ selected_worker +1
-                    sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
                     
-                    # 2️⃣ accepted_volunteers 累加
-                    sheet.update_cell(task_row_idx, acc_col, updated_val)
-
                     # UI顯示姓名 + 手機後3碼
                     acc_text = str(row.get("accepted_volunteers", "")).strip()
                     if acc_text:
