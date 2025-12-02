@@ -383,12 +383,6 @@ if st.session_state.get("page") == "signup":
 
         df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
 
-        # 找出所有報名記錄（id_number > 0 代表是報名某個任務）
-        signup_records = df_fresh[
-            (df_fresh["role"] == "volunteer") & 
-            (df_fresh["id_number"] > 0)
-        ]
-
         # 檢查此志工是否已報名此任務
         is_duplicate = not signup_records[
             (signup_records["phone"] == vol_info["phone"]) & 
@@ -438,6 +432,11 @@ if st.session_state.get("page") == "signup":
                     existing = df_fresh.loc[df_fresh["id_number"] == int(task_id),
                                            "accepted_volunteers"].iloc[0]
                     existing = existing if existing else ""
+                    current_list = existing.split("\n")
+
+                    if new_entry in current_list:
+                        st.error("❌ 您已經報名過此任務，請勿重複報名！")
+                        st.stop()
                 
                     # 新增累積文字
                     phone_norm = normalize_phone(vol_info["phone"])
@@ -616,7 +615,7 @@ for idx, row in filtered_missions.iterrows():
     tid = int(row["id_number"])
     
     # 取得該任務目前人數 (加上使用者剛報名但還沒同步到 sheet 的部分)
-    current_count = mission_counts.get(tid, 0)
+    current_count = int(row["selected_worker"])
     if tid in st.session_state["my_new_tasks"] and tid not in joined_in_sheet:
         current_count += 1
         
