@@ -487,10 +487,11 @@ LineID：{victim_line}
                     # Clear cache + rerun to refresh UI
                     load_data.clear()
                     
-                    st.success("🎉 報名成功！感謝您伸出援手 ❤️")
-                    
+                    st.session_state["signup_confirm"] = False
+                    st.session_state["page"] = "task_list"
+                    load_data.clear()
                     st.experimental_rerun()
-                    st.stop()
+
 
         with col2:
             if st.button(" 取消報名", use_container_width=True):
