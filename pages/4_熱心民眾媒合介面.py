@@ -482,8 +482,14 @@ LineID：{victim_line}
                     load_data.clear()
 
                     # 顯示成功訊息
-                    st.success("🎉 報名成功！")
-                    st.markdown(f"```\n{contact_note}\n```")
+                    st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+
+                    # 重設流程狀態，回到列表畫面
+                    st.session_state["signup_confirm"] = False
+                    st.session_state["page"] = "task_list"
+                    
+                    st.rerun()
+                
 
                     # 清除驗證狀態
                     if "verified_volunteer" in st.session_state:
