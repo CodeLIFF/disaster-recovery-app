@@ -462,37 +462,6 @@ if st.session_state.get("page") == "signup":
                     load_data.clear()
                     safe_rerun()
 
-                    # 1. 寫入 Google Sheet ：新增一筆報名紀錄
-                    new_row = [
-                        int(task_id),          # id_number
-                        "volunteer",           # role
-                        vol_info["name"],      # name
-                        phone_to_write,        # phone
-                        vol_info.get("line_id", ""),
-                        "", "", "", "",        # mission fields: 留空
-                        "", "", "", "", "", "" # 剩下欄位通通留空
-                    ]
-                    
-                    # UI顯示姓名 + 手機後3碼
-                    acc_text = str(row.get("accepted_volunteers", "")).strip()
-                    if acc_text:
-                        st.markdown("**已報名志工：**")
-                        st.markdown(acc_text.replace("\n", "、"))
-
-                    # 允許多位換行累加
-                    if existing:
-                        updated_val = existing + "\n" + new_entry
-                    else:
-                        updated_val = new_entry
-                    
-                    sheet.update_cell(task_row_idx, acc_col, updated_val)
-        
-                    # 2. 清快取，強制重新讀取最新資料
-                    load_data.clear()
-        
-                    # 3. UI 立即更新（重新顯示正確人數）
-                    safe_rerun()
-
                     # 取得受災戶聯絡資訊
                     victim_name = ""
                     victim_phone = ""
