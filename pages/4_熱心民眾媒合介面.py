@@ -287,9 +287,6 @@ if st.session_state.get("page") == "signup":
             st.session_state["page"] = "task_list"
             safe_rerun()
         st.stop()
-        
-    if st.session_state.get("page") == "task_list":
-    st.session_state["page"] = None
     
     st.title("報名任務")
     st.info("請先驗證您的志工身份（需先在系統中註冊）")
