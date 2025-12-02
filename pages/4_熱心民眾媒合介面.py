@@ -6,10 +6,6 @@ import re  # <- 新增：normalize_phone 使用到 re
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
-# routing handler
-if st.session_state.get("page") == "task_list":
-    st.experimental_rerun()
-
 # ----- 緊湊模式 CSS（預設套用） -----
 css = """
 <style>
