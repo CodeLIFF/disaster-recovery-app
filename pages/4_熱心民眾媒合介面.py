@@ -428,6 +428,9 @@ if st.session_state.get("page") == "signup":
                     # 最新資料
                     current_count_in_sheet = int(df_fresh.loc[df_fresh["id_number"] == int(task_id),
                                                              "selected_worker"].iloc[0])
+                    # 新增累積文字
+                    phone_norm = normalize_phone(vol_info["phone"])
+                    new_entry = f"{vol_info['name']}({phone_norm[-3:]})"
                 
                     existing = df_fresh.loc[df_fresh["id_number"] == int(task_id),
                                            "accepted_volunteers"].iloc[0]
@@ -437,12 +440,8 @@ if st.session_state.get("page") == "signup":
                     if new_entry in current_list:
                         st.error("❌ 您已經報名過此任務，請勿重複報名！")
                         st.stop()
-                
-                    # 新增累積文字
-                    phone_norm = normalize_phone(vol_info["phone"])
-                    new_entry = f"{vol_info['name']}({phone_norm[-3:]})"
+                        
                     updated_val = (existing + "\n" + new_entry).strip()
-                
                     # 更新人數
                     sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
                     # 更新報名志工顯示欄位
