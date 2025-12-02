@@ -487,8 +487,7 @@ LineID：{victim_line}
                     # 重設流程狀態，回到列表畫面
                     st.session_state["signup_confirm"] = False
                     st.session_state["page"] = "task_list"
-                    
-                    st.rerun()
+                    st.experimental_rerun()
                 
 
                     # 清除驗證狀態
