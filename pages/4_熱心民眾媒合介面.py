@@ -384,12 +384,12 @@ if st.session_state.get("page") == "signup":
         df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
 
         # 檢查此志工是否已報名此任務
-        is_duplicate = not signup_records[
-            (signup_records["phone"] == vol_info["phone"]) & 
-            (signup_records["id_number"] == int(task_id))
+        already_signed = not volunteers[
+            (volunteers["phone"].apply(normalize_phone) == normalize_phone(vol_info["phone"])) &
+            (volunteers["id_number"] == int(task_id))
         ].empty
-
-        if is_duplicate:
+        
+        if already_signed:
             st.error("❌ 您已經報名過此任務，請勿重複報名！")
             col1, col2 = st.columns(2)
             with col1:
