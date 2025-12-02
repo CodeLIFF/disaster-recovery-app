@@ -479,19 +479,30 @@ LineID：{victim_line}
                     # 更新 Session
                     st.session_state["user_phone"] = vol_info["phone"]
                     st.session_state["my_new_tasks"].append(int(task_id))
-                    
-                    # Reset state
-                    st.session_state["signup_confirm"] = False
-                    st.session_state["page"] = "task_list"
-                    
-                    # Clear cache + rerun to refresh UI
                     load_data.clear()
-                    
-                    st.session_state["signup_confirm"] = False
-                    st.session_state["page"] = "task_list"
-                    load_data.clear()
-                    st.experimental_rerun()
 
+                    # 顯示成功訊息
+                    st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+
+                    # 重設流程狀態，回到列表畫面
+                    st.session_state["signup_confirm"] = False
+                    st.session_state["page"] = "task_list"
+                    st.experimental_rerun()
+                
+
+                    # 清除驗證狀態
+                    if "verified_volunteer" in st.session_state:
+                        del st.session_state["verified_volunteer"]
+                    
+                    # 回任務列表按鈕
+                    if st.button("返回任務列表", use_container_width=True):
+                        st.session_state["page"] = "task_list"
+                        load_data.clear()
+                        safe_rerun()
+
+                except Exception as e:
+                    st.error(f"報名失敗: {e}")
+                    st.stop()
 
         with col2:
             if st.button(" 取消報名", use_container_width=True):
