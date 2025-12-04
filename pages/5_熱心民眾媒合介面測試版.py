@@ -349,6 +349,13 @@ if st.session_state.get("page") == "check_contact":
     
     st.title("確認聯絡資訊")
     st.info("請驗證您已報名此任務")
+
+    # 新增：常駐返回按鈕，避免點錯卡住
+    if st.button("🔙 返回任務列表", use_container_width=True):
+        if "contact_verified_volunteer" in st.session_state:
+            del st.session_state["contact_verified_volunteer"]
+        st.session_state["page"] = "task_list"
+        safe_rerun()
     
     if "contact_verified_volunteer" not in st.session_state:
         with st.form("contact_verify_form"):
@@ -422,6 +429,7 @@ if st.session_state.get("page") == "check_contact":
         else:
             st.warning("⚠ 無法找到受災戶聯絡資訊")
         
+        # 新增：已驗證狀態也提供返回按鈕（原本已存在，保留）
         if st.button("🔙 返回任務列表", use_container_width=True):
             if "contact_verified_volunteer" in st.session_state:
                 del st.session_state["contact_verified_volunteer"]
@@ -523,6 +531,21 @@ if st.session_state.get("page") == "signup":
         st.success(f"✅ 已驗證身份：{vol_info['name']} ({vol_info['phone']})")
         st.info("請確認報名資訊")
 
+        # 如果剛剛已經報名成功（顯示成功訊息並提供返回列表按鈕）
+        if st.session_state.get("signup_success") and st.session_state.get("signup_task_id") == task_id:
+            st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+            contact_note = st.session_state.get("signup_contact_note", "")
+            if contact_note:
+                st.info(contact_note)
+            if st.button("🔙 返回任務列表", use_container_width=True):
+                # 清理狀態並返回
+                for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.session_state["page"] = "task_list"
+                safe_rerun()
+            st.stop()
+
         # 重新檢查是否已報名此任務
         load_data.clear()
         df_fresh = load_data()
@@ -601,18 +624,17 @@ LineID：{victim_line}
                     else:
                         contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
 
-                    # 顯示成功訊息
+                    # 顯示成功訊息（但不自動跳回列表，等使用者按返回）
                     st.success("🎉 報名成功！感謝您伸出援手 ❤️")
                     st.info(contact_note)
 
-                    # 重設流程狀態，回到列表畫面
-                    st.session_state["signup_confirm"] = False
-                    st.session_state["page"] = "task_list"
-                    # 清除驗證狀態
-                    if "verified_volunteer" in st.session_state:
-                        del st.session_state["verified_volunteer"]
+                    # 設定狀態：讓畫面停留在成功視圖，等待使用者返回列表
+                    st.session_state["signup_success"] = True
+                    st.session_state["signup_task_id"] = int(task_id)
+                    st.session_state["signup_contact_note"] = contact_note
 
-                    safe_rerun()
+                    # 不立即 safe_rerun() 或切換頁面，保留驗證狀態供成功頁顯示
+                    # 清除驗證狀態等動作改到使用者點「返回任務列表」時處理
 
                 except Exception as e:
                     st.error(f"報名失敗: {e}")
