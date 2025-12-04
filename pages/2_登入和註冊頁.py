@@ -96,23 +96,23 @@ if mode == "登入":
     st.success(f"登入成功！歡迎 {user['name']}")
 
 
-            # -------------------------------------------------------------
-            # 受災戶：顯示自己發布的任務
-            # -------------------------------------------------------------
-            if role == "victim":
-                st.subheader("您發布的任務 Your posted missions")
+        # -------------------------------------------------------------
+        # 受災戶：顯示自己發布的任務
+        # -------------------------------------------------------------
+        if role == "victim":
+            st.subheader("您發布的任務 Your posted missions")
 
-                my_tasks = df[df["phone"] == phone_norm]
+            my_tasks = df[df["phone"] == phone_norm]
 
-                if my_tasks.empty:
-                    st.info("目前沒有您發布的任務。")
-                else:
-                    st.dataframe(
-                        my_tasks[
-                            ["mission_name", "address", "work_time",
-                             "demand_worker", "selected_worker",
-                             "accepted_volunteers", "date"]
-                        ]
+            if my_tasks.empty:
+                st.info("目前沒有您發布的任務。")
+            else:
+                st.dataframe(
+                    my_tasks[
+                        ["mission_name", "address", "work_time",
+                         "demand_worker", "selected_worker",
+                         "accepted_volunteers", "date"]
+                    ]
                     )
 
             # -------------------------------------------------------------
@@ -121,29 +121,29 @@ if mode == "登入":
 # -------------------------------------------------------------
 # 志工：顯示被接受的任務
 # -------------------------------------------------------------
+        else:
+            st.subheader("您參與的任務 Missions you joined")
+        
+            my_name = user["name"]
+            last3 = phone_norm[-3:]   # 手機末三碼
+        
+            # pattern: 例如 "薑餅人(111)"
+            pattern = rf"{re.escape(my_name)}\({last3}\)"
+        
+            df["accepted_volunteers"] = df["accepted_volunteers"].astype(str)
+        
+            joined_tasks = df[df["accepted_volunteers"].str.contains(pattern, regex=True)]
+        
+            if joined_tasks.empty:
+                st.info("目前您沒有參與的任務。")
             else:
-                st.subheader("您參與的任務 Missions you joined")
-            
-                my_name = user["name"]
-                last3 = phone_norm[-3:]   # 手機末三碼
-            
-                # pattern: 例如 "薑餅人(111)"
-                pattern = rf"{re.escape(my_name)}\({last3}\)"
-            
-                df["accepted_volunteers"] = df["accepted_volunteers"].astype(str)
-            
-                joined_tasks = df[df["accepted_volunteers"].str.contains(pattern, regex=True)]
-            
-                if joined_tasks.empty:
-                    st.info("目前您沒有參與的任務。")
-                else:
-                    st.dataframe(
-                        joined_tasks[
-                            ["mission_name", "address", "work_time",
-                             "demand_worker", "selected_worker",
-                             "accepted_volunteers", "date"]
-                        ]
-                    )
+                st.dataframe(
+                    joined_tasks[
+                        ["mission_name", "address", "work_time",
+                         "demand_worker", "selected_worker",
+                         "accepted_volunteers", "date"]
+                    ]
+                )
 
 
 # =================================================================
