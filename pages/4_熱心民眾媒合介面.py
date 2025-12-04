@@ -276,7 +276,95 @@ if not df.empty:
 else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
-
+# ========== 新增：再次確認受災戶聯絡資訊頁面 ==========
+if st.session_state.get("page") == "check_contact":
+    task_id = st.session_state.get("check_contact_task_id")
+    
+    if task_id is None:
+        st.error("未選擇任務，請從任務列表操作。")
+        if st.button("返回任務列表"):
+            st.session_state["page"] = "task_list"
+            safe_rerun()
+        st.stop()
+    
+    st.title("確認聯絡資訊")
+    st.info("請驗證您已報名此任務")
+    
+    if "contact_verified_volunteer" not in st.session_state:
+        with st.form("contact_verify_form"):
+            verify_phone = st.text_input("請輸入您報名時的手機號碼（09開頭）")
+            verify_submit = st.form_submit_button("驗證身份")
+        
+        if verify_submit:
+            if not verify_phone:
+                st.warning("❌ 請輸入手機號碼")
+            else:
+                verify_phone = verify_phone.strip()
+                if not verify_phone.startswith("0") and len(verify_phone) == 9:
+                    verify_phone = "0" + verify_phone
+                
+                if not (verify_phone.isdigit() and len(verify_phone) == 10 and verify_phone.startswith("09")):
+                    st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
+                else:
+                    load_data.clear()
+                    df_fresh = load_data()
+                    
+                    if df_fresh.empty:
+                        st.error("❌ 無法讀取資料，請稍後再試")
+                        st.stop()
+                    
+                    df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
+                    
+                    # 檢查是否已報名此任務
+                    signup_check = df_fresh[
+                        (df_fresh["role"] == "volunteer") & 
+                        (df_fresh["phone"] == normalize_phone(verify_phone)) &
+                        (df_fresh["id_number"] == int(task_id))
+                    ]
+                    
+                    if signup_check.empty:
+                        st.error("❌ 您尚未報名此任務，無法查看聯絡資訊！")
+                        if st.button("返回任務列表"):
+                            st.session_state["page"] = "task_list"
+                            safe_rerun()
+                        st.stop()
+                    else:
+                        st.session_state["contact_verified_volunteer"] = verify_phone
+                        st.success("✅ 驗證成功！")
+                        safe_rerun()
+    
+    else:
+        # 已驗證，顯示受災戶聯絡資訊
+        st.success("✅ 驗證通過")
+        
+        load_data.clear()
+        df_fresh = load_data()
+        
+        victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+        
+        if not victim_rows.empty:
+            vr = victim_rows.iloc[0]
+            victim_name = str(vr.get("name", "")).strip()
+            victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
+            victim_line = str(vr.get("line_id", "")).strip()
+            victim_note = str(vr.get("note", "")).strip()
+            
+            st.markdown("### 📞 受災戶聯絡資訊")
+            st.write(f"**姓名：** {victim_name}")
+            st.write(f"**電話：** {victim_phone}")
+            st.write(f"**Line ID：** {victim_line}")
+            if victim_note:
+                st.write(f"**備註：** {victim_note}")
+        else:
+            st.warning("⚠ 無法找到受災戶聯絡資訊")
+        
+        if st.button("🔙 返回任務列表", use_container_width=True):
+            if "contact_verified_volunteer" in st.session_state:
+                del st.session_state["contact_verified_volunteer"]
+            st.session_state["page"] = "task_list"
+            safe_rerun()
+    
+    st.stop()
 # 分支：signup 頁面（驗證身份 + 報名流程）
 if st.session_state.get("page") == "signup":
     # 確保有選到任務 ID
