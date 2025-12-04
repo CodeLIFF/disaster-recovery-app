@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-import re  # <- 新增：normalize_phone 使用到 re
+import re  # <- normalize_phone 使用到 re
 
 st.set_page_config(page_title="志工媒合平台（熱心民眾）", layout="wide")
 
@@ -85,7 +85,7 @@ def normalize_phone(p):
     - 移除單引號 (Google Sheets 的文字前綴)
     - 去掉空白、破折號等非數字字元
     - 9 碼且 9 開頭則補 0
-    - 回傳標準 10 碼電話號碼
+    - 回傳標準 10 碼電話號碼（若無法取得則回傳原數字序列）
     """
     if p is None or p == "":
         return ""
@@ -101,6 +101,7 @@ def normalize_phone(p):
         return "0" + p
     
     return p
+
 # ==========================================
 # 1. 初始化設定與連線
 # ==========================================
@@ -138,7 +139,8 @@ def get_sheet_connection():
     )
     gc = gspread.authorize(creds)
     SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
-    return gc.open_by_key(SHEET_ID).sheet1
+    # Use named worksheet "vol" (consistent with other pages)
+    return gc.open_by_key(SHEET_ID).worksheet("vol")
 
 try:
     sheet = get_sheet_connection()
@@ -167,11 +169,12 @@ def load_data():
         
         # 轉型文字欄位
         text_fields = ["phone", "line_id", "mission_name", "address", "work_time",
-                       "skills", "resources", "transport", "note", "photo", "role", "name", "other"]
+                       "skills", "resources", "transport", "note", "photo", "role", "name", "other", "accepted_volunteers"]
         for col in text_fields:
             if col in df.columns:
                 df[col] = df[col].fillna("").astype(str).str.strip()
-        if "phone" in df.columns:# ✅ 特別處理 phone 欄位：移除單引號
+        if "phone" in df.columns:
+            # ✅ 特別處理 phone 欄位：移除單引號並標準化
             df["phone"] = df["phone"].apply(normalize_phone)
 
         # ----- 新增容錯：確保後續程式會使用到的欄位都存在 -----
@@ -181,11 +184,10 @@ def load_data():
             if c not in df.columns:
                 df[c] = 0
             else:
-                # 若欄位存在但可能含 NaN 或非整數，保證型別
                 df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
         # 若缺少預期的文字欄位，補上空字串
         required_texts = ["phone", "line_id", "mission_name", "address", "work_time",
-                          "skills", "resources", "transport", "note", "photo", "role", "name", "other"]
+                          "skills", "resources", "transport", "note", "photo", "role", "name", "other", "accepted_volunteers"]
         for c in required_texts:
             if c not in df.columns:
                 df[c] = ""
@@ -260,7 +262,64 @@ transport_display = {
     "other": " 其他"
 }
 
+# ---------- accepted_volunteers 相關 helper ----------
+def format_vol_entry(name, phone):
+    """統一格式：Name(末3碼)。用於比對與顯示。"""
+    pn = normalize_phone(phone)
+    suffix = pn[-3:] if pn else ""
+    return f"{name}({suffix})"
 
+def parse_accepted_volunteers(text):
+    """把 accepted_volunteers 文字拆成清單（每行一筆），並去除空白。"""
+    if not text:
+        return []
+    return [l.strip() for l in str(text).splitlines() if l.strip()]
+
+def volunteer_signed_up_for_task(df, task_id, vol_name, vol_phone):
+    """檢查某志工（name + phone）是否已在指定任務的 accepted_volunteers 裡。"""
+    victim_rows = df[(df["role"] == "victim") & (df["id_number"] == int(task_id))]
+    if victim_rows.empty:
+        return False
+    acc_text = str(victim_rows.iloc[0].get("accepted_volunteers", "") or "")
+    entries = parse_accepted_volunteers(acc_text)
+    target = format_vol_entry(vol_name, vol_phone)
+    return target in entries
+
+def add_volunteer_to_task_on_sheet(df, task_id, vol_name, vol_phone):
+    """
+    將志工加入指定任務的 accepted_volunteers 並在 sheet 上更新 selected_worker 與 accepted_volunteers。
+    會回傳 True/False 表示是否成功；若失敗會 raise Exception 由呼叫端處理。
+    """
+    # 取得工作表列號（DataFrame index -> Google Sheet row）
+    victim_idx = df.index[(df["role"] == "victim") & (df["id_number"] == int(task_id))]
+    if len(victim_idx) == 0:
+        raise ValueError("找不到指定任務在資料表中的列")
+    task_row_idx = victim_idx[0] + 2  # DataFrame index 0 -> sheet row 2
+
+    # 取得當前 selected_worker 與 accepted_volunteers
+    current_count_in_sheet = int(df.loc[df["id_number"] == int(task_id), "selected_worker"].iloc[0])
+    existing = str(df.loc[df["id_number"] == int(task_id), "accepted_volunteers"].iloc[0] or "")
+
+    new_entry = format_vol_entry(vol_name, vol_phone)
+    existing_list = parse_accepted_volunteers(existing)
+    if new_entry in existing_list:
+        # 已存在，不重複加入
+        return False
+
+    # 檢查是否已額滿
+    current_demand = int(df.loc[df["id_number"] == int(task_id), "demand_worker"].iloc[0])
+    if current_count_in_sheet >= current_demand:
+        raise ValueError("任務已額滿")
+
+    updated_val = (existing + "\n" + new_entry).strip()
+    # 找出 sheet 的欄位 index（使用 DataFrame 的欄位位置 +1）
+    selected_col = df.columns.get_loc("selected_worker") + 1
+    acc_col = df.columns.get_loc("accepted_volunteers") + 1
+
+    # 更新 sheet（gspread 的 update_cell 使用 1-index）
+    sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
+    sheet.update_cell(task_row_idx, acc_col, updated_val)
+    return True
 
 # ==========================================
 # 3. 程式主流程（以 page 控制，點「我要報名」會切換到 signup）
@@ -276,6 +335,108 @@ if not df.empty:
 else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
+
+# ========== 聯絡資訊確認頁面 ==========
+if st.session_state.get("page") == "check_contact":
+    task_id = st.session_state.get("check_contact_task_id")
+    
+    if task_id is None:
+        st.error("未選擇任務，請從任務列表操作。")
+        if st.button("返回任務列表"):
+            st.session_state["page"] = "task_list"
+            safe_rerun()
+        st.stop()
+    
+    st.title("確認聯絡資訊")
+    st.info("請驗證您已報名此任務")
+
+    # 新增：常駐返回按鈕，避免點錯卡住
+    if st.button("🔙 返回任務列表", use_container_width=True):
+        if "contact_verified_volunteer" in st.session_state:
+            del st.session_state["contact_verified_volunteer"]
+        st.session_state["page"] = "task_list"
+        safe_rerun()
+    
+    if "contact_verified_volunteer" not in st.session_state:
+        with st.form("contact_verify_form"):
+            verify_phone = st.text_input("請輸入您報名時的手機號碼（09開頭）")
+            verify_submit = st.form_submit_button("驗證身份")
+        
+        if verify_submit:
+            if not verify_phone:
+                st.warning("❌ 請輸入手機號碼")
+            else:
+                # 標準化輸入
+                verify_phone = verify_phone.strip()
+                if not verify_phone.startswith("0") and len(verify_phone) == 9:
+                    verify_phone = "0" + verify_phone
+                verify_phone = normalize_phone(verify_phone)
+
+                if not (verify_phone.isdigit() and len(verify_phone) == 10 and verify_phone.startswith("09")):
+                    st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
+                else:
+                    # 重新讀取最新資料
+                    load_data.clear()
+                    df_fresh = load_data()
+                    if df_fresh.empty:
+                        st.error("❌ 無法讀取資料，請稍後再試")
+                        st.stop()
+
+                    # 檢查該手機是否存在於指定任務的 accepted_volunteers
+                    # 透過比對末三碼（與系統加入格式一致）
+                    victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+                    if victim_rows.empty:
+                        st.error("❌ 找不到該任務")
+                        st.stop()
+                    acc_text = str(victim_rows.iloc[0].get("accepted_volunteers", "") or "")
+                    entries = parse_accepted_volunteers(acc_text)
+                    suffix = verify_phone[-3:] if verify_phone else ""
+                    matched = any(suffix and suffix in e for e in entries)
+                    
+                    if not matched:
+                        st.error("❌ 您尚未報名此任務，無法查看聯絡資訊！")
+                        if st.button("返回任務列表"):
+                            st.session_state["page"] = "task_list"
+                            safe_rerun()
+                        st.stop()
+                    else:
+                        st.session_state["contact_verified_volunteer"] = verify_phone
+                        st.success("✅ 驗證成功！")
+                        safe_rerun()
+    
+    else:
+        # 已驗證，顯示受災戶聯絡資訊
+        st.success("✅ 驗證通過")
+        
+        load_data.clear()
+        df_fresh = load_data()
+        
+        victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
+        
+        if not victim_rows.empty:
+            vr = victim_rows.iloc[0]
+            victim_name = str(vr.get("name", "")).strip()
+            victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
+            victim_line = str(vr.get("line_id", "")).strip()
+            victim_note = str(vr.get("note", "")).strip()
+            
+            st.markdown("### 📞 受災戶聯絡資訊")
+            st.write(f"**姓名：** {victim_name}")
+            st.write(f"**電話：** {victim_phone}")
+            st.write(f"**Line ID：** {victim_line}")
+            if victim_note:
+                st.write(f"**備註：** {victim_note}")
+        else:
+            st.warning("⚠ 無法找到受災戶聯絡資訊")
+        
+        # 新增：已驗證狀態也提供返回按鈕（原本已存在，保留）
+        if st.button("🔙 返回任務列表", use_container_width=True):
+            if "contact_verified_volunteer" in st.session_state:
+                del st.session_state["contact_verified_volunteer"]
+            st.session_state["page"] = "task_list"
+            safe_rerun()
+    
+    st.stop()
 
 # 分支：signup 頁面（驗證身份 + 報名流程）
 if st.session_state.get("page") == "signup":
@@ -306,6 +467,7 @@ if st.session_state.get("page") == "signup":
                 verify_phone = verify_phone.strip()
                 if not verify_phone.startswith("0") and len(verify_phone) == 9:
                     verify_phone = "0" + verify_phone
+                verify_phone = normalize_phone(verify_phone)
 
                 if not (verify_phone.isdigit() and len(verify_phone) == 10 and verify_phone.startswith("09")):
                     st.error("❌ 請輸入有效的台灣手機號碼（09開頭共10碼）")
@@ -369,6 +531,21 @@ if st.session_state.get("page") == "signup":
         st.success(f"✅ 已驗證身份：{vol_info['name']} ({vol_info['phone']})")
         st.info("請確認報名資訊")
 
+        # 如果剛剛已經報名成功（顯示成功訊息並提供返回列表按鈕）
+        if st.session_state.get("signup_success") and st.session_state.get("signup_task_id") == task_id:
+            st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+            contact_note = st.session_state.get("signup_contact_note", "")
+            if contact_note:
+                st.info(contact_note)
+            if st.button("🔙 返回任務列表", use_container_width=True):
+                # 清理狀態並返回
+                for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.session_state["page"] = "task_list"
+                safe_rerun()
+            st.stop()
+
         # 重新檢查是否已報名此任務
         load_data.clear()
         df_fresh = load_data()
@@ -383,11 +560,8 @@ if st.session_state.get("page") == "signup":
 
         df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
 
-        # 檢查此志工是否已報名此任務
-        already_signed = not volunteers[
-            (volunteers["phone"].apply(normalize_phone) == normalize_phone(vol_info["phone"])) &
-            (volunteers["id_number"] == int(task_id))
-        ].empty
+        # 檢查此志工是否已報名此任務（改用 victim.accepted_volunteers）
+        already_signed = volunteer_signed_up_for_task(df_fresh, task_id, vol_info["name"], vol_info["phone"])
         
         if already_signed:
             st.error("❌ 您已經報名過此任務，請勿重複報名！")
@@ -420,51 +594,25 @@ if st.session_state.get("page") == "signup":
             if st.button("✅ 確認報名", type="primary", use_container_width=True):
 
                 try:
-                    # 找到任務所在行
-                    task_row_idx = df_fresh[df_fresh["id_number"] == int(task_id)].index[0] + 2
-                    selected_col = df_fresh.columns.get_loc("selected_worker") + 1
-                    acc_col = df_fresh.columns.get_loc("accepted_volunteers") + 1
-                
-                    # 最新資料
-                    current_count_in_sheet = int(df_fresh.loc[df_fresh["id_number"] == int(task_id),
-                                                             "selected_worker"].iloc[0])
-                    # 新增累積文字
-                    phone_norm = normalize_phone(vol_info["phone"])
-                    new_entry = f"{vol_info['name']}({phone_norm[-3:]})"
-                
-                    existing = df_fresh.loc[df_fresh["id_number"] == int(task_id),
-                                           "accepted_volunteers"].iloc[0]
-                    existing = existing if existing else ""
-                    current_list = existing.split("\n")
-
-                    if new_entry in current_list:
+                    # 嘗試把志工加入任務（包含名額檢查）
+                    added = add_volunteer_to_task_on_sheet(df_fresh, task_id, vol_info["name"], vol_info["phone"])
+                    if not added:
                         st.error("❌ 您已經報名過此任務，請勿重複報名！")
                         st.stop()
-                        
-                    updated_val = (existing + "\n" + new_entry).strip()
-                    # 更新人數
-                    sheet.update_cell(task_row_idx, selected_col, current_count_in_sheet + 1)
-                    # 更新報名志工顯示欄位
-                    sheet.update_cell(task_row_idx, acc_col, updated_val)
-                
-                    # 強制重新載入、刷新 UI
+
+                    # 清除 cache 並更新 session state
                     load_data.clear()
-                    safe_rerun()
+                    st.session_state["user_phone"] = vol_info["phone"]
+                    st.session_state["my_new_tasks"].append(int(task_id))
 
-                    # 取得受災戶聯絡資訊
-                    victim_name = ""
-                    victim_phone = ""
-                    victim_line = ""
-                    victim_note = ""
-
-                    if not df_fresh.empty:
-                        victim_rows = df_fresh[(df_fresh["role"] == "victim") & (df_fresh["id_number"] == int(task_id))]
-                        if not victim_rows.empty:
-                            vr = victim_rows.iloc[0]
-                            victim_name = str(vr.get("name", "")).strip()
-                            victim_phone = normalize_phone(str(vr.get("phone", "")).strip())
-                            victim_line = str(vr.get("line_id", "")).strip()
-                            victim_note = str(vr.get("note", "")).strip()
+                    # 取得受災戶聯絡資訊（以最新資料為準）
+                    load_data.clear()
+                    df_after = load_data()
+                    victim_rows = df_after[(df_after["role"] == "victim") & (df_after["id_number"] == int(task_id))]
+                    victim_name = victim_rows.iloc[0].get("name", "") if not victim_rows.empty else ""
+                    victim_phone = normalize_phone(victim_rows.iloc[0].get("phone", "")) if not victim_rows.empty else ""
+                    victim_line = victim_rows.iloc[0].get("line_id", "") if not victim_rows.empty else ""
+                    victim_note = victim_rows.iloc[0].get("note", "") if not victim_rows.empty else ""
 
                     # 建立聯絡資訊
                     if victim_name or victim_phone or victim_line or victim_note:
@@ -476,29 +624,26 @@ LineID：{victim_line}
                     else:
                         contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
 
-                    # 更新 Session
-                    st.session_state["user_phone"] = vol_info["phone"]
-                    st.session_state["my_new_tasks"].append(int(task_id))
-                    load_data.clear()
-
-                    # 顯示成功訊息
+                    # 顯示成功訊息（並在同一畫面提供返回按鈕）
                     st.success("🎉 報名成功！感謝您伸出援手 ❤️")
+                    st.info(contact_note)
 
-                    # 重設流程狀態，回到列表畫面
-                    st.session_state["signup_confirm"] = False
-                    st.session_state["page"] = "task_list"
-                    st.experimental_rerun()
-                
+                    # 設定狀態：供後續 render 使用（也保留在 session）
+                    st.session_state["signup_success"] = True
+                    st.session_state["signup_task_id"] = int(task_id)
+                    st.session_state["signup_contact_note"] = contact_note
 
-                    # 清除驗證狀態
-                    if "verified_volunteer" in st.session_state:
-                        del st.session_state["verified_volunteer"]
-                    
-                    # 回任務列表按鈕
-                    if st.button("返回任務列表", use_container_width=True):
+                    # 立即在同一頁面提供返回按鈕，使用者按下後才會跳回任務列表
+                    if st.button("🔙 返回任務列表", key=f"back_after_signup_{task_id}", use_container_width=True):
+                        # 清理相關狀態並返回列表
+                        for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                            if k in st.session_state:
+                                del st.session_state[k]
                         st.session_state["page"] = "task_list"
-                        load_data.clear()
                         safe_rerun()
+
+                    # 停在成功視圖，等待使用者按返回
+                    st.stop()
 
                 except Exception as e:
                     st.error(f"報名失敗: {e}")
@@ -605,10 +750,16 @@ mission_counts = volunteers["id_number"].value_counts().to_dict() if not volunte
 # 3. 判斷「當前使用者」的狀態
 current_user_phone = st.session_state.get("user_phone")
 
-# 找出使用者在 Sheet 裡報名過的任務 ID
+# 找出使用者在 Sheet 裡報名過的任務 ID（透過 accepted_volunteers）
 joined_in_sheet = []
-if current_user_phone and not volunteers.empty:
-    joined_in_sheet = volunteers[volunteers["phone"] == current_user_phone]["id_number"].tolist()
+if current_user_phone and not missions.empty:
+    # 找出 victim rows where accepted_volunteers contains user's suffix
+    suffix = normalize_phone(current_user_phone)[-3:] if current_user_phone else ""
+    if suffix:
+        for iid, vr in missions.set_index("id_number").iterrows():
+            acc = str(vr.get("accepted_volunteers", "") or "")
+            if acc and any(suffix in e for e in parse_accepted_volunteers(acc)):
+                joined_in_sheet.append(iid)
 
 # 合併「Sheet 裡的舊紀錄」和「剛按下報名的新紀錄」
 all_my_joined_tasks = set(joined_in_sheet + st.session_state["my_new_tasks"])
@@ -660,6 +811,12 @@ for idx, row in filtered_missions.iterrows():
         if acc_text:
             st.markdown("**已報名志工：**")
             st.markdown(acc_text.replace("\n", "、"))
+            # ✅ 新增：確認聯絡按鈕
+    
+        if st.button("📞 確認受災戶聯絡資訊", key=f"contact_{tid}"):
+            st.session_state["page"] = "check_contact"
+            st.session_state["check_contact_task_id"] = tid
+            safe_rerun()
 
         # --- 按鈕邏輯 ---
         is_full = current_count >= row["demand_worker"]
