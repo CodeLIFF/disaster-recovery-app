@@ -115,56 +115,16 @@ if "page" not in st.session_state:
     st.session_state["page"] = "task_list"  # 預設頁面
 # selected_task_id 會在點選報名按鈕時被設定
 
-# 更健壯的 rerun helper
+# 安全 rerun wrapper（處理不同 Streamlit 版本沒有 experimental_rerun 屬性的情況）
 def safe_rerun():
-    """
-    嘗試用多種方法做 rerun：
-    1) st.experimental_rerun()
-    2) st.rerun()
-    若以上呼叫拋例外或不存在，則回退到 session_state toggle + st.stop()
-    """
+    # 先嘗試呼叫常見的 rerun 實作
     for name in ("experimental_rerun", "rerun"):
         fn = getattr(st, name, None)
         if callable(fn):
-            try:
-                return fn()
-            except Exception:
-                # 若呼叫失敗，繼續嘗試下一種
-                pass
-    # fallback: 切換一個 trigger 並 stop，讓下一次互動會重新 render
+            return fn()
+    # 若都沒有，使用 session_state toggle 並 stop（可在下次互動時看到更新）
     st.session_state["_safe_rerun_trigger"] = not st.session_state.get("_safe_rerun_trigger", False)
     st.stop()
-
-def go_to_task_list(clear_verified=False, clear_signup=False, clear_contact=False):
-    """
-    統一處理返回任務列表：
-    - 可選擇清除驗證/報名/聯絡驗證等 session keys
-    - 設定 page 並嘗試立即 rerun（若不可用則 fallback）
-    """
-    if clear_verified and "verified_volunteer" in st.session_state:
-        del st.session_state["verified_volunteer"]
-    if clear_signup:
-        for k in ["signup_success", "signup_task_id", "signup_contact_note"]:
-            if k in st.session_state:
-                del st.session_state[k]
-    if clear_contact and "contact_verified_volunteer" in st.session_state:
-        del st.session_state["contact_verified_volunteer"]
-
-    st.session_state["page"] = "task_list"
-
-    # 盡量立即 rerun，若失敗則使用 safe_rerun
-    try:
-        fn = getattr(st, "experimental_rerun", None) or getattr(st, "rerun", None)
-        if callable(fn):
-            try:
-                return fn()
-            except Exception:
-                # 如果直接呼叫會拋錯，降級到 safe_rerun()
-                pass
-    except Exception:
-        pass
-
-    safe_rerun()
 
 # Google Sheet 連線 (使用快取資源，避免重複連線)
 @st.cache_resource
@@ -376,6 +336,23 @@ else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
 
+# DEBUG: 臨時診斷區塊（貼在 df = load_data() 及 missions/volunteers 建立之後）
+st.markdown("### DEBUG 診斷（開發用）")
+st.write("session_state['page']:", st.session_state.get("page"))
+st.write("df rows:", len(df))
+st.write("missions rows (role=='victim' & demand_worker>0):", len(missions))
+st.write("volunteers rows (role=='volunteer'):", len(volunteers))
+st.write("filtered_missions 預計顯示數量（若有篩選條件請在 UI 檢查）")
+if st.button("重設頁面為任務列表 (debug)", key="debug_reset_to_tasklist"):
+    st.session_state["page"] = "task_list"
+    # 確保 cache 重新讀取
+    try:
+        load_data.clear()
+    except Exception:
+        pass
+    # 使用 safe_rerun 以相容不同 streamlit 版本
+    safe_rerun()
+
 # ========== 聯絡資訊確認頁面 ==========
 if st.session_state.get("page") == "check_contact":
     task_id = st.session_state.get("check_contact_task_id")
@@ -383,7 +360,8 @@ if st.session_state.get("page") == "check_contact":
     if task_id is None:
         st.error("未選擇任務，請從任務列表操作。")
         if st.button("返回任務列表", key="cc_top_return"):
-            go_to_task_list()
+            st.session_state["page"] = "task_list"
+            safe_rerun()
         st.stop()
     
     st.title("確認聯絡資訊")
@@ -391,7 +369,10 @@ if st.session_state.get("page") == "check_contact":
 
     # 新增：常駐返回按鈕，避免點錯卡住
     if st.button("🔙 返回任務列表", use_container_width=True, key="cc_back_top"):
-        go_to_task_list(clear_contact=True)
+        if "contact_verified_volunteer" in st.session_state:
+            del st.session_state["contact_verified_volunteer"]
+        st.session_state["page"] = "task_list"
+        safe_rerun()
     
     if "contact_verified_volunteer" not in st.session_state:
         with st.form("contact_verify_form"):
@@ -432,12 +413,13 @@ if st.session_state.get("page") == "check_contact":
                     if not matched:
                         st.error("❌ 您尚未報名此任務，無法查看聯絡資訊！")
                         if st.button("返回任務列表", key="cc_verify_fail_return"):
-                            go_to_task_list()
+                            st.session_state["page"] = "task_list"
+                            safe_rerun()
                         st.stop()
                     else:
                         st.session_state["contact_verified_volunteer"] = verify_phone
                         st.success("✅ 驗證成功！")
-                        go_to_task_list()  # 直接回列表或可換成 safe_rerun to show verified page; original behavior reran to same page, but returning is safe here
+                        safe_rerun()
     
     else:
         # 已驗證，顯示受災戶聯絡資訊
@@ -466,7 +448,10 @@ if st.session_state.get("page") == "check_contact":
         
         # 新增：已驗證狀態也提供返回按鈕（原本已存在，保留）
         if st.button("🔙 返回任務列表", use_container_width=True, key="cc_back_verified"):
-            go_to_task_list(clear_contact=True)
+            if "contact_verified_volunteer" in st.session_state:
+                del st.session_state["contact_verified_volunteer"]
+            st.session_state["page"] = "task_list"
+            safe_rerun()
     
     st.stop()
 
@@ -477,7 +462,8 @@ if st.session_state.get("page") == "signup":
     if task_id is None:
         st.error("未選擇報名的任務，請從任務列表選擇任務後再報名。")
         if st.button("返回任務列表", key="signup_no_task_return"):
-            go_to_task_list(clear_verified=True)
+            st.session_state["page"] = "task_list"
+            safe_rerun()
         st.stop()
     
     st.title("報名任務")
@@ -534,7 +520,8 @@ if st.session_state.get("page") == "signup":
                             masked_phones = [f"{p[:4]}****{p[-2:]}" for p in registered_vols["phone"].tolist()[:5]]
                             st.info(f"資料庫中已註冊電話範例：{', '.join(masked_phones)}")
                         if st.button("返回任務列表", key="signup_verify_fail_return"):
-                            go_to_task_list()
+                            st.session_state["page"] = "task_list"
+                            safe_rerun()
                         st.stop()
                     else:
                         # 驗證成功，取一筆代表資料
@@ -553,7 +540,6 @@ if st.session_state.get("page") == "signup":
                             "line_id": str(vol_info.get("line_id", ""))
                         }
                         st.success(f"✅ 驗證成功！歡迎 {vol_info.get('name', '志工')}！")
-                        # 直接 rerun 以帶入已驗證狀態
                         safe_rerun()
 
     # 階段 2: 已驗證身份，進行報名
@@ -569,7 +555,12 @@ if st.session_state.get("page") == "signup":
             if contact_note:
                 st.info(contact_note)
             if st.button("🔙 返回任務列表", use_container_width=True, key=f"signup_back_after_{task_id}"):
-                go_to_task_list(clear_verified=True, clear_signup=True)
+                # 清理狀態並返回
+                for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                st.session_state["page"] = "task_list"
+                safe_rerun()
             st.stop()
 
         # 重新檢查是否已報名此任務
@@ -579,7 +570,9 @@ if st.session_state.get("page") == "signup":
         if df_fresh.empty:
             st.error("無法讀取任務資料，請稍後再試。")
             if st.button("返回任務列表", key="signup_df_empty_return"):
-                go_to_task_list(clear_verified=True)
+                st.session_state["page"] = "task_list"
+                del st.session_state["verified_volunteer"]
+                safe_rerun()
             st.stop()
 
         df_fresh["phone"] = df_fresh["phone"].apply(normalize_phone)
@@ -592,10 +585,14 @@ if st.session_state.get("page") == "signup":
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("返回列表", key=f"signup_already_back_{task_id}"):
-                    go_to_task_list(clear_verified=True)
+                    del st.session_state["verified_volunteer"]
+                    st.session_state["page"] = "task_list"
+                    safe_rerun()
             with col2:
                 if st.button("報名其他任務", key=f"signup_already_other_{task_id}"):
-                    go_to_task_list(clear_verified=True)
+                    del st.session_state["verified_volunteer"]
+                    st.session_state["page"] = "task_list"
+                    safe_rerun()
             st.stop()
 
         # 顯示任務資訊
@@ -655,7 +652,12 @@ LineID：{victim_line}
 
                     # 立即在同一頁面提供返回按鈕，使用者按下後才會跳回任務列表
                     if st.button("🔙 返回任務列表", key=f"back_after_signup_{task_id}", use_container_width=True):
-                        go_to_task_list(clear_verified=True, clear_signup=True)
+                        # 清理相關狀態並返回列表
+                        for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                            if k in st.session_state:
+                                del st.session_state[k]
+                        st.session_state["page"] = "task_list"
+                        safe_rerun()
 
                     # 停在成功視圖，等待使用者按返回
                     st.stop()
@@ -666,7 +668,10 @@ LineID：{victim_line}
 
         with col2:
             if st.button(" 取消報名", use_container_width=True, key=f"signup_cancel_{task_id}"):
-                go_to_task_list(clear_verified=True)
+                if "verified_volunteer" in st.session_state:
+                    del st.session_state["verified_volunteer"]
+                st.session_state["page"] = "task_list"
+                safe_rerun()
 
     st.stop()
 
