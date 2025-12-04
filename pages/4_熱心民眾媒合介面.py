@@ -138,7 +138,8 @@ def get_sheet_connection():
     )
     gc = gspread.authorize(creds)
     SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
-    return gc.open_by_key(SHEET_ID).sheet1
+    #return gc.open_by_key(SHEET_ID).sheet1
+    return gc.open_by_key(SHEET_ID).worksheet("vol")
 
 try:
     sheet = get_sheet_connection()
@@ -534,7 +535,7 @@ if st.session_state.get("page") == "signup":
                         
                     # 檢查是否已額滿
                     current_demand = int(task.get('demand_worker', 0))
-                    if current_count >= current_demand:
+                    if current_count_in_sheet >= current_demand:
                         st.error("❌ 報名失敗！此任務人數已滿")
                         st.stop()
                         
