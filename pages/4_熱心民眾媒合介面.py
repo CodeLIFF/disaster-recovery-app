@@ -336,22 +336,7 @@ else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
 
-# DEBUG: 臨時診斷區塊（貼在 df = load_data() 及 missions/volunteers 建立之後）
-st.markdown("### DEBUG 診斷（開發用）")
-st.write("session_state['page']:", st.session_state.get("page"))
-st.write("df rows:", len(df))
-st.write("missions rows (role=='victim' & demand_worker>0):", len(missions))
-st.write("volunteers rows (role=='volunteer'):", len(volunteers))
-st.write("filtered_missions 預計顯示數量（若有篩選條件請在 UI 檢查）")
-if st.button("重設頁面為任務列表 (debug)", key="debug_reset_to_tasklist"):
-    st.session_state["page"] = "task_list"
-    # 確保 cache 重新讀取
-    try:
-        load_data.clear()
-    except Exception:
-        pass
-    # 使用 safe_rerun 以相容不同 streamlit 版本
-    safe_rerun()
+
 
 # ========== 聯絡資訊確認頁面 ==========
 if st.session_state.get("page") == "check_contact":
