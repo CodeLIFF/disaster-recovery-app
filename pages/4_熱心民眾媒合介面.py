@@ -759,10 +759,10 @@ for idx, row in filtered_missions.iterrows():
             st.markdown(acc_text.replace("\n", "、"))
             # ✅ 新增：確認聯絡按鈕
     
-    if st.button("📞 確認受災戶聯絡資訊", key=f"contact_{tid}"):
-        st.session_state["page"] = "check_contact"
-        st.session_state["check_contact_task_id"] = tid
-        safe_rerun()
+        if st.button("📞 確認受災戶聯絡資訊", key=f"contact_{tid}"):
+            st.session_state["page"] = "check_contact"
+            st.session_state["check_contact_task_id"] = tid
+            safe_rerun()
 
         # --- 按鈕邏輯 ---
         is_full = current_count >= row["demand_worker"]
