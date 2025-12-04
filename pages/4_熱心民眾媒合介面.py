@@ -508,6 +508,9 @@ if st.session_state.get("page") == "signup":
             if st.button("✅ 確認報名", type="primary", use_container_width=True):
 
                 try:
+                    st.session_state["signup_success"] = True
+                    st.session_state["signup_task_id"] = int(task_id)
+                    
                     # 找到任務所在行
                     task_row_idx = df_fresh[df_fresh["id_number"] == int(task_id)].index[0] + 2
                     selected_col = df_fresh.columns.get_loc("selected_worker") + 1
@@ -527,6 +530,12 @@ if st.session_state.get("page") == "signup":
 
                     if new_entry in current_list:
                         st.error("❌ 您已經報名過此任務，請勿重複報名！")
+                        st.stop()
+                        
+                    # 檢查是否已額滿
+                    current_demand = int(task.get('demand_worker', 0))
+                    if current_count >= current_demand:
+                        st.error("❌ 報名失敗！此任務人數已滿")
                         st.stop()
                         
                     updated_val = (existing + "\n" + new_entry).strip()
@@ -557,10 +566,10 @@ if st.session_state.get("page") == "signup":
                     # 建立聯絡資訊
                     if victim_name or victim_phone or victim_line or victim_note:
                         contact_note = f"""這是你選擇幫忙的受災戶資料，可以自行連絡他了喔!
-受災戶姓名：{victim_name}
-電話：{victim_phone}
-LineID：{victim_line}
-備註：{victim_note}"""
+                            受災戶姓名：{victim_name}
+                            電話：{victim_phone}
+                            LineID：{victim_line}
+                            備註：{victim_note}"""
                     else:
                         contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
 
@@ -748,6 +757,12 @@ for idx, row in filtered_missions.iterrows():
         if acc_text:
             st.markdown("**已報名志工：**")
             st.markdown(acc_text.replace("\n", "、"))
+            # ✅ 新增：確認聯絡按鈕
+    
+    if st.button("📞 確認受災戶聯絡資訊", key=f"contact_{tid}"):
+        st.session_state["page"] = "check_contact"
+        st.session_state["check_contact_task_id"] = tid
+        safe_rerun()
 
         # --- 按鈕邏輯 ---
         is_full = current_count >= row["demand_worker"]
