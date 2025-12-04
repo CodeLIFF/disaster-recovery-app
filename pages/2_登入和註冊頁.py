@@ -15,140 +15,172 @@ creds = Credentials.from_service_account_info(
 gc = gspread.authorize(creds)
 
 SHEET_ID = "1PbYajOLCW3p5vsxs958v-eCPgHC1_DnHf9G_mcFx9C0"
-ws = gc.open_by_key(SHEET_ID).worksheet("vol")  # tab 名稱是 vol
+ws = gc.open_by_key(SHEET_ID).worksheet("vol")
 
 
-# ---------- 工具函式：電話標準化 ----------
+# ---------- 工具函式 ----------
 def normalize_phone(s: str) -> str:
-    """
-    統一電話格式：
-    - 移除單引號 (Google Sheets 的文字前綴)
-    - 去掉空白、破折號等非數字字元
-    - 9 碼且 9 開頭則補 0
-    - 回傳標準 10 碼電話號碼
-    """
     if s is None or s == "":
         return ""
-    
-    # 移除單引號 (Google Sheets 的文字格式前綴)
     s = str(s).replace("'", "").strip()
-    
-    # 只保留數字
     s = re.sub(r"\D", "", s)
-    
-    # 若長度 9 且 9 開頭，補 0
     if len(s) == 9 and s.startswith("9"):
         s = "0" + s
-    
     return s
 
-# ---------- 取得下一個 id_number ----------
+
 def get_next_id_number():
-    col = ws.col_values(1)[1:]  # 跳過標題列
-    nums = []
-    for v in col:
-        v = str(v).strip()
-        if v.isdigit():
-            nums.append(int(v))
+    col = ws.col_values(1)[1:]
+    nums = [int(v) for v in col if str(v).strip().isdigit()]
     return (max(nums) + 1) if nums else 1
 
 
-# ---------- 查重 ----------
-# ✅ 這裡改成「同一個 role 下，只要 phone 一樣就視為重複」
 def is_duplicate(role: str, name: str, phone: str) -> bool:
     data = ws.get_all_records()
     if not data:
         return False
-
     df = pd.DataFrame(data)
-
-    # 統一格式：全部轉成字串＋strip
     df["role"] = df["role"].astype(str).str.strip().str.lower()
     df["phone"] = df["phone"].astype(str).apply(normalize_phone)
-
-    role_norm = role.strip().lower()
-    phone_norm = normalize_phone(phone)
-
-    # 🟡 不再用 name 判斷，只看「同一個 role + phone」
-    mask = (df["role"] == role_norm) & (df["phone"] == phone_norm)
-    return mask.any()
+    return ((df["role"] == role.lower().strip()) &
+            (df["phone"] == normalize_phone(phone))).any()
 
 
-# ---------- Streamlit 表單本體 ----------
+# =================================================================
+#  🟦🟦🟦               登入模式 / 註冊模式                🟦🟦🟦
+# =================================================================
 st.title("註冊 / 登入 basic registration")
 
-role_display = st.selectbox("身分 role", ["志工 volunteer", "受災戶 victim"])
-role = "volunteer" if "志工" in role_display else "victim"
+mode = st.radio("請選擇操作模式", ["註冊", "登入"])
 
-name = st.text_input("姓名 name")
-phone = st.text_input("電話 phone number")
-line_id = st.text_input("Line ID（選填）")
 
-# 即時檢查電話格式
-if phone:
-    phone_norm = normalize_phone(phone)
-    if len(phone_norm) != 10:
-        st.warning("電話格式請輸入 10 位數字（例如 0912345678）")
+# =================================================================
+#  🟩🟩🟩                     登入系統                     🟩🟩🟩
+# =================================================================
+if mode == "登入":
+    st.header("登入 Login")
 
-if role == "victim":
-    st.caption("＊請先填這一張，受災需求細節會在下一張「受災需求表單」填寫。")
-else:
-    st.caption("＊請先填這一張，志工媒合會依此資料進行。")
+    role_display = st.selectbox("身分 role", ["志工 volunteer", "受災戶 victim"])
+    role = "volunteer" if "志工" in role_display else "victim"
 
-if st.button("送出基本資料 submit"):
-    phone_norm = normalize_phone(phone)
+    login_phone = st.text_input("請輸入註冊時的電話")
 
-    # 1️⃣ 必填檢查
-    if not name or not phone:
-        st.error("❌ 姓名與電話為必填欄位")
-    elif len(phone_norm) != 10:
-        st.error("❌ 電話格式應為 10 位數字，請修正後再送出。")
-    else:
-        # 2️⃣ 查重：同 role + phone 已存在就擋掉
-        if is_duplicate(role, name, phone_norm):
-            if role == "victim":
-                st.warning("⚠ 這支電話已經註冊為『受災戶 victim』，請不要重複註冊。")
-            else:
-                st.warning("⚠ 這支電話已經註冊為『志工 volunteer』，請不要重複註冊。")
+    if st.button("登入 Login"):
+        phone_norm = normalize_phone(login_phone)
+
+        data = ws.get_all_records()
+        df = pd.DataFrame(data)
+        df["phone"] = df["phone"].astype(str).apply(normalize_phone)
+        df["role"] = df["role"].astype(str)
+
+        # 找使用者
+        user_rows = df[(df["phone"] == phone_norm) & (df["role"] == role)]
+
+        if user_rows.empty:
+            st.error("❌ 查無此帳號，請確認電話或身分是否正確。")
         else:
-            # 3️⃣ 新增一個 id_number
+            user = user_rows.iloc[0]
+            st.success(f"登入成功！歡迎 {user['name']}")
+
+            # -------------------------------------------------------------
+            # 受災戶：顯示自己發布的任務
+            # -------------------------------------------------------------
+            if role == "victim":
+                st.subheader("您發布的任務 Your posted missions")
+
+                my_tasks = df[df["phone"] == phone_norm]
+
+                if my_tasks.empty:
+                    st.info("目前沒有您發布的任務。")
+                else:
+                    st.dataframe(
+                        my_tasks[
+                            ["mission_name", "address", "work_time",
+                             "demand_worker", "selected_worker",
+                             "accepted_volunteers", "date"]
+                        ]
+                    )
+
+            # -------------------------------------------------------------
+            # 志工：顯示被接受的任務
+            # -------------------------------------------------------------
+# -------------------------------------------------------------
+# 志工：顯示被接受的任務
+# -------------------------------------------------------------
+            else:
+                st.subheader("您參與的任務 Missions you joined")
+            
+                my_name = user["name"]
+                last3 = phone_norm[-3:]   # 手機末三碼
+            
+                # pattern: 例如 "薑餅人(111)"
+                pattern = rf"{re.escape(my_name)}\({last3}\)"
+            
+                df["accepted_volunteers"] = df["accepted_volunteers"].astype(str)
+            
+                joined_tasks = df[df["accepted_volunteers"].str.contains(pattern, regex=True)]
+            
+                if joined_tasks.empty:
+                    st.info("目前您沒有參與的任務。")
+                else:
+                    st.dataframe(
+                        joined_tasks[
+                            ["mission_name", "address", "work_time",
+                             "demand_worker", "selected_worker",
+                             "accepted_volunteers", "date"]
+                        ]
+                    )
+
+
+# =================================================================
+#  🟦🟦🟦             以下為原本的「註冊模式」             🟦🟦🟦
+# =================================================================
+else:
+    role_display = st.selectbox("身分 role", ["志工 volunteer", "受災戶 victim"])
+    role = "volunteer" if "志工" in role_display else "victim"
+
+    name = st.text_input("姓名 name")
+    phone = st.text_input("電話 phone number")
+    line_id = st.text_input("Line ID（選填）")
+
+    if phone:
+        if len(normalize_phone(phone)) != 10:
+            st.warning("電話格式請輸入 10 位數字（例如 0912345678）")
+
+    if st.button("送出基本資料 submit"):
+        phone_norm = normalize_phone(phone)
+
+        if not name or not phone:
+            st.error("❌ 姓名與電話為必填欄位")
+        elif len(phone_norm) != 10:
+            st.error("❌ 電話格式應為 10 位數字")
+        elif is_duplicate(role, name, phone_norm):
+            st.warning("❌ 此電話已註冊，請改用登入模式")
+        else:
             id_number = get_next_id_number()
 
             row = [
-                id_number,        # id_number
-                role,             # role
-                name.strip(),     # name
-                "'"+phone_norm,       # phone（用標準化後的）
-                line_id.strip(),  # line_id
-                "",               # mission_name
-                "",               # address
-                "",               # work_time
-                "",               # demand_worker
-                0,                # selected_worker
-                "",               # accepted_volunteers
-                "",               # resources
-                "",               # skills
-                "",               # photo
-                "",               # transport
-                "",               # note
+                id_number,
+                role,
+                name.strip(),
+                "'" + phone_norm,
+                line_id.strip(),
+                "",
+                "",
+                "",
+                "",
+                0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             ]
 
             try:
                 ws.append_row(row)
-
-                # 存進 session_state 讓其他頁面可以用
-                st.session_state["current_volunteer_id"] = id_number
-                st.session_state["current_volunteer_name"] = name.strip()
-                st.session_state["current_volunteer_phone"] = phone_norm
-                st.session_state["current_volunteer_line"] = line_id.strip()
-
-                st.success("✅ 已成功送出基本資料！")
-
-                if role == "victim":
-                    st.info("請接著前往「受災需求表單」頁面填寫今日需求。")
-                else:
-                    st.info("請接著前往「民眾媒合介面」頁面選擇任務。")
-
+                st.success("✅ 註冊成功！請使用登入模式登入。")
             except Exception as e:
-                st.error("❌ 填寫失敗，請稍後再試。")
+                st.error("❌ 填寫失敗")
                 st.error(str(e))
