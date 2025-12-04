@@ -335,6 +335,7 @@ if not df.empty:
 else:
     missions = pd.DataFrame()
     volunteers = pd.DataFrame()
+
 # DEBUG: 臨時診斷區塊（貼在 df = load_data() 及 missions/volunteers 建立之後）
 st.markdown("### DEBUG 診斷（開發用）")
 st.write("session_state['page']:", st.session_state.get("page"))
@@ -349,7 +350,9 @@ if st.button("重設頁面為任務列表 (debug)", key="debug_reset_to_tasklist
         load_data.clear()
     except Exception:
         pass
-    st.experimental_rerun()
+    # 使用 safe_rerun 以相容不同 streamlit 版本
+    safe_rerun()
+
 # ========== 聯絡資訊確認頁面 ==========
 if st.session_state.get("page") == "check_contact":
     task_id = st.session_state.get("check_contact_task_id")
@@ -703,4 +706,157 @@ keyword = st.text_input(" 地址關鍵字搜尋", placeholder="輸入地址關�
 
 # 搜尋按鈕
 search_button = st.button("🔍 開始搜尋", type="primary", use_container_width=False, key="search_btn")
-# ... (其餘內容保持不變) ...
+
+# 反向映射字典（從顯示文字找回原始 key）
+time_reverse = {v: k for k, v in time_display.items()}
+skills_reverse = {v: k for k, v in skills_display.items()}
+resources_reverse = {v: k for k, v in resources_display.items()}
+transport_reverse = {v: k for k, v in transport_display.items()}
+
+# 初始化過濾結果
+filtered_missions = missions.copy()
+
+# 只有按下搜尋按鈕或有任何選項時才進行過濾
+if search_button or selected_times or selected_skills or selected_resources or selected_transports or keyword:
+    # 過濾工作時間（OR 邏輯：符合任一選項即可）
+    if selected_times:
+        time_keys = [time_reverse[t] for t in selected_times]
+        time_filter = filtered_missions["work_time"].apply(
+            lambda x: any(key in str(x) for key in time_keys)
+        )
+        filtered_missions = filtered_missions[time_filter]
+
+    # 過濾技能（OR 邏輯：符合任一選項即可）
+    if selected_skills:
+        skill_keys = [skills_reverse[s] for s in selected_skills]
+        skill_filter = filtered_missions["skills"].apply(
+            lambda x: any(key in str(x) for key in skill_keys)
+        )
+        filtered_missions = filtered_missions[skill_filter]
+
+    # 過濾資源（OR 邏輯：符合任一選項即可）
+    if selected_resources:
+        resource_keys = [resources_reverse[r] for r in selected_resources]
+        resource_filter = filtered_missions["resources"].apply(
+            lambda x: any(key in str(x) for key in resource_keys)
+        )
+        filtered_missions = filtered_missions[resource_filter]
+
+    # 過濾交通方式（OR 邏輯：符合任一選項即可）
+    if selected_transports:
+        transport_keys = [transport_reverse[t] for t in selected_transports]
+        transport_filter = filtered_missions["transport"].apply(
+            lambda x: any(key in str(x) for key in transport_keys)
+        )
+        filtered_missions = filtered_missions[transport_filter]
+
+    # 過濾地址關鍵字
+    if keyword:
+        k = keyword.strip()
+        filtered_missions = filtered_missions[
+            filtered_missions["address"].str.contains(k, case=False, na=False)
+        ]
+
+st.write(f"共 {len(filtered_missions)} 筆需求")
+st.markdown("---")
+
+# 2. 預先計算所有任務的「目前人數」 (避免在迴圈內算)
+# mission_counts 會使用 volunteers 的 id_number 欄位（load_data 已確保該欄位存在）
+mission_counts = volunteers["id_number"].value_counts().to_dict() if not volunteers.empty else {}
+
+# 3. 判斷「當前使用者」的狀態
+current_user_phone = st.session_state.get("user_phone")
+
+# 找出使用者在 Sheet 裡報名過的任務 ID（透過 accepted_volunteers）
+joined_in_sheet = []
+if current_user_phone and not missions.empty:
+    # 找出 victim rows where accepted_volunteers contains user's suffix
+    suffix = normalize_phone(current_user_phone)[-3:] if current_user_phone else ""
+    if suffix:
+        for iid, vr in missions.set_index("id_number").iterrows():
+            acc = str(vr.get("accepted_volunteers", "") or "")
+            if acc and any(suffix in e for e in parse_accepted_volunteers(acc)):
+                joined_in_sheet.append(iid)
+
+# 合併「Sheet 裡的舊紀錄」和「剛按下報名的新紀錄」
+all_my_joined_tasks = set(joined_in_sheet + st.session_state["my_new_tasks"])
+has_joined_any = len(all_my_joined_tasks) > 0 # 是否已經報名過任一項
+
+# 4. 顯示卡片迴圈
+for idx, row in filtered_missions.iterrows():
+    tid = int(row["id_number"])
+    
+    # 取得該任務目前人數 (加上使用者剛報名但還沒同步到 sheet 的部分)
+    current_count = int(row["selected_worker"])
+    if tid in st.session_state["my_new_tasks"] and tid not in joined_in_sheet:
+        current_count += 1
+        
+    left, right = st.columns([2, 1])
+    
+    with left:
+        mission_title = str(row.get("mission_name", "")).strip()
+        addr = str(row.get("address", "")).strip()
+        if mission_title:
+            st.markdown(f"### {mission_title}")
+        else:
+            if addr:
+                st.markdown(f"### 任務地址：{addr}")
+            else:
+                st.markdown(f"### 任務 #{tid}")
+        
+        if addr:
+            st.markdown(f"地址： {addr}")
+        
+        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
+        st.markdown(time_html, unsafe_allow_html=True)
+
+        st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
+        
+        resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
+        st.markdown(resources_html, unsafe_allow_html=True)
+
+        skills_html = f'<span style="font-weight:600;margin-right:25px"> 能力需求：</span>{render_labels(row["skills"], skills_display, "#ADEDCC")}'
+        st.markdown(skills_html, unsafe_allow_html=True)
+
+        transport_html = f'<span style="font-weight:600;margin-right:25px"> 建議交通方式：</span>{render_labels(row["transport"], transport_display, "#35D0C7")}'
+        st.markdown(transport_html, unsafe_allow_html=True)
+        
+        st.markdown(f" 備註： {row['note']}")
+
+        # 把「已報名志工」移到備註下方顯示（如有）
+        acc_text = str(row.get("accepted_volunteers", "")).strip()
+        if acc_text:
+            st.markdown("**已報名志工：**")
+            st.markdown(acc_text.replace("\n", "、"))
+            # ✅ 新增：確認聯絡按鈕
+    
+        if st.button("📞 確認受災戶聯絡資訊", key=f"contact_{tid}"):
+            st.session_state["page"] = "check_contact"
+            st.session_state["check_contact_task_id"] = tid
+            safe_rerun()
+
+        # --- 按鈕邏輯 ---
+        is_full = current_count >= row["demand_worker"]
+        is_joined_this = tid in all_my_joined_tasks
+        
+        if is_joined_this:
+            st.success("✅ 您已報名此任務")
+        elif has_joined_any:
+            st.warning("⚠ 您已報名其他任務 (每人限一項)")
+        elif is_full:
+            st.error("❌ 已額滿")
+        else:
+            # 按鈕會把 page 切到 signup，並記錄 selected_task_id（確保 key 唯一）
+            if st.button("我要報名", key=f"btn_{tid}"):
+                st.session_state["page"] = "signup"
+                st.session_state["selected_task_id"] = int(tid)
+                safe_rerun()
+
+    with right:
+        photo = str(row.get("photo", "")).strip()
+        if photo.startswith("http"):
+            st.image(photo, use_column_width=True)
+        else:
+            st.info("尚無照片")
+            
+    st.markdown("<div class='card-spacer'></div>", unsafe_allow_html=True)
