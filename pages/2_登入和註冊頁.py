@@ -66,39 +66,35 @@ if mode == "登入":
     login_phone = st.text_input("請輸入註冊時的電話")
 
     if st.button("登入 Login"):
-    phone_norm = normalize_phone(login_phone)
+        phone_norm = normalize_phone(login_phone)
 
-    data = ws.get_all_records()
-    df = pd.DataFrame(data)
-    df["phone"] = df["phone"].astype(str).apply(normalize_phone)
-    df["role"] = df["role"].astype(str).str.strip()
+        data = ws.get_all_records()
+        df = pd.DataFrame(data)
+        df["phone"] = df["phone"].astype(str).apply(normalize_phone)
+        df["role"] = df["role"].astype(str).str.strip()
 
-    # 先找所有匹配電話的紀錄
-    all_records = df[df["phone"] == phone_norm]
+        # 找所有電話相同的紀錄
+        all_records = df[df["phone"] == phone_norm]
 
-    if all_records.empty:
-        st.error("❌ 查無此電話的註冊紀錄，請先完成註冊。")
-        st.stop()
+        if all_records.empty:
+            st.error("❌ 查無此電話的註冊紀錄，請先完成註冊。")
+            st.stop()
 
-    # 再找是否具有「使用者選的身分」
-    user_records = all_records[all_records["role"] == role]
+        # 在這些紀錄裡查詢該身分
+        user_records = all_records[all_records["role"] == role]
 
-    if user_records.empty:
-        # 缺這個身分 → 提醒可以用該電話註冊新身分
-        st.error(
-            f"❌ 此電話尚未以「{role}」身分註冊。\n"
-            f"你可以切換到『註冊模式』，用同一支電話增加新身分。"
-        )
-        st.stop()
+        if user_records.empty:
+            st.error(
+                f"❌ 此電話尚未以「{role}」身分註冊。\n"
+                f"你可以切換到『註冊模式』，用同一支電話增加新身分。"
+            )
+            st.stop()
 
-    # 找到正確身分 → 登入成功
-    user = user_records.iloc[0]
-    st.success(f"登入成功！歡迎 {user['name']}")
+        # 登入成功
+        user = user_records.iloc[0]
+        st.success(f"登入成功！歡迎 {user['name']}")
 
-
-        # -------------------------------------------------------------
-        # 受災戶：顯示自己發布的任務
-        # -------------------------------------------------------------
+        # ---------------- 受災戶：顯示自己發布的任務 ----------------
         if role == "victim":
             st.subheader("您發布的任務 Your posted missions")
 
@@ -113,27 +109,21 @@ if mode == "登入":
                          "demand_worker", "selected_worker",
                          "accepted_volunteers", "date"]
                     ]
-                    )
+                )
 
-            # -------------------------------------------------------------
-            # 志工：顯示被接受的任務
-            # -------------------------------------------------------------
-# -------------------------------------------------------------
-# 志工：顯示被接受的任務
-# -------------------------------------------------------------
+        # ---------------- 志工：顯示被接受的任務 ----------------
         else:
             st.subheader("您參與的任務 Missions you joined")
-        
+
             my_name = user["name"]
-            last3 = phone_norm[-3:]   # 手機末三碼
-        
-            # pattern: 例如 "薑餅人(111)"
+            last3 = phone_norm[-3:]
+
             pattern = rf"{re.escape(my_name)}\({last3}\)"
-        
+
             df["accepted_volunteers"] = df["accepted_volunteers"].astype(str)
-        
+
             joined_tasks = df[df["accepted_volunteers"].str.contains(pattern, regex=True)]
-        
+
             if joined_tasks.empty:
                 st.info("目前您沒有參與的任務。")
             else:
@@ -144,7 +134,6 @@ if mode == "登入":
                          "accepted_volunteers", "date"]
                     ]
                 )
-
 
 # =================================================================
 #  🟦🟦🟦             以下為原本的「註冊模式」             🟦🟦🟦
