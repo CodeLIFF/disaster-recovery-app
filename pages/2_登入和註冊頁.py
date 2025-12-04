@@ -66,21 +66,35 @@ if mode == "登入":
     login_phone = st.text_input("請輸入註冊時的電話")
 
     if st.button("登入 Login"):
-        phone_norm = normalize_phone(login_phone)
+    phone_norm = normalize_phone(login_phone)
 
-        data = ws.get_all_records()
-        df = pd.DataFrame(data)
-        df["phone"] = df["phone"].astype(str).apply(normalize_phone)
-        df["role"] = df["role"].astype(str)
+    data = ws.get_all_records()
+    df = pd.DataFrame(data)
+    df["phone"] = df["phone"].astype(str).apply(normalize_phone)
+    df["role"] = df["role"].astype(str).str.strip()
 
-        # 找使用者
-        user_rows = df[(df["phone"] == phone_norm) & (df["role"] == role)]
+    # 先找所有匹配電話的紀錄
+    all_records = df[df["phone"] == phone_norm]
 
-        if user_rows.empty:
-            st.error("❌ 查無此帳號，請確認電話或身分是否正確。")
-        else:
-            user = user_rows.iloc[0]
-            st.success(f"登入成功！歡迎 {user['name']}")
+    if all_records.empty:
+        st.error("❌ 查無此電話的註冊紀錄，請先完成註冊。")
+        st.stop()
+
+    # 再找是否具有「使用者選的身分」
+    user_records = all_records[all_records["role"] == role]
+
+    if user_records.empty:
+        # 缺這個身分 → 提醒可以用該電話註冊新身分
+        st.error(
+            f"❌ 此電話尚未以「{role}」身分註冊。\n"
+            f"你可以切換到『註冊模式』，用同一支電話增加新身分。"
+        )
+        st.stop()
+
+    # 找到正確身分 → 登入成功
+    user = user_records.iloc[0]
+    st.success(f"登入成功！歡迎 {user['name']}")
+
 
             # -------------------------------------------------------------
             # 受災戶：顯示自己發布的任務
