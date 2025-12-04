@@ -546,7 +546,7 @@ if st.session_state.get("page") == "signup":
                 
                     # 強制重新載入、刷新 UI
                     load_data.clear()
-                    safe_rerun()
+                    
 
                     # 取得受災戶聯絡資訊
                     victim_name = ""
