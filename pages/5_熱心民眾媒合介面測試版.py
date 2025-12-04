@@ -624,17 +624,26 @@ LineID：{victim_line}
                     else:
                         contact_note = "受災戶聯絡資料：無（目標任務未在 Sheet 找到對應受災戶）。"
 
-                    # 顯示成功訊息（但不自動跳回列表，等使用者按返回）
+                    # 顯示成功訊息（並在同一畫面提供返回按鈕）
                     st.success("🎉 報名成功！感謝您伸出援手 ❤️")
                     st.info(contact_note)
 
-                    # 設定狀態：讓畫面停留在成功視圖，等待使用者返回列表
+                    # 設定狀態：供後續 render 使用（也保留在 session）
                     st.session_state["signup_success"] = True
                     st.session_state["signup_task_id"] = int(task_id)
                     st.session_state["signup_contact_note"] = contact_note
 
-                    # 不立即 safe_rerun() 或切換頁面，保留驗證狀態供成功頁顯示
-                    # 清除驗證狀態等動作改到使用者點「返回任務列表」時處理
+                    # 立即在同一頁面提供返回按鈕，使用者按下後才會跳回任務列表
+                    if st.button("🔙 返回任務列表", key=f"back_after_signup_{task_id}", use_container_width=True):
+                        # 清理相關狀態並返回列表
+                        for k in ["signup_success", "signup_task_id", "signup_contact_note", "verified_volunteer"]:
+                            if k in st.session_state:
+                                del st.session_state[k]
+                        st.session_state["page"] = "task_list"
+                        safe_rerun()
+
+                    # 停在成功視圖，等待使用者按返回
+                    st.stop()
 
                 except Exception as e:
                     st.error(f"報名失敗: {e}")
