@@ -535,7 +535,7 @@ if st.session_state.get("page") == "signup":
                         
                     # 檢查是否已額滿
                     current_demand = int(task.get('demand_worker', 0))
-                    if current_count_in_sheet >= current_demand:
+                    if current_count >= current_demand:
                         st.error("❌ 報名失敗！此任務人數已滿")
                         st.stop()
                         
