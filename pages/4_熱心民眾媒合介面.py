@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
+from datetime import datetime, timedelta, timezone
 from google.oauth2.service_account import Credentials
 import re  # <- normalize_phone 使用到 re
 
@@ -766,6 +767,21 @@ if current_user_phone and not missions.empty:
 # 合併「Sheet 裡的舊紀錄」和「剛按下報名的新紀錄」
 all_my_joined_tasks = set(joined_in_sheet + st.session_state["my_new_tasks"])
 has_joined_any = len(all_my_joined_tasks) > 0 # 是否已經報名過任一項
+# ------- 新增：隱藏「已過期」的任務 -------
+taiwan_tz = timezone(timedelta(hours=8))
+today_tw = datetime.now(taiwan_tz).strftime("%Y-%m-%d")
+
+def is_future_or_today(date_str):
+    if not str(date_str).strip():
+        return False
+    try:
+        d = datetime.strptime(str(date_str).strip(), "%Y-%m-%d")
+        t = datetime.strptime(today_tw, "%Y-%m-%d")
+        return d >= t
+    except Exception:
+        return False
+
+filtered_missions = filtered_missions[filtered_missions["date"].apply(is_future_or_today)]
 
 # 4. 顯示卡片迴圈
 for idx, row in filtered_missions.iterrows():
