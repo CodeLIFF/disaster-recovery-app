@@ -107,9 +107,22 @@ if mode == "登入":
                     my_tasks[
                         ["mission_name", "address", "work_time",
                          "demand_worker", "selected_worker",
-                         "accepted_volunteers", "date"]
+                         "accepted_volunteers", "date","name", "phone", "line_id"]
                     ]
                 )
+                display_df = display_df.rename(columns={
+                    "mission_name": "任務名稱",
+                    "address": "地點",
+                    "work_time": "工作時間",
+                    "demand_worker": "需求人數",
+                    "selected_worker": "目前人數",
+                    "date": "發布日期",
+                    "name": "受災戶姓名",      # 對應 name
+                    "phone": "受災戶電話",     # 對應 phone
+                    "line_id": "受災戶 LineID" # 對應 line_id
+                })
+
+                st.dataframe(display_df)
 
         # ---------------- 志工：顯示被接受的任務 ----------------
         else:
@@ -131,9 +144,22 @@ if mode == "登入":
                     joined_tasks[
                         ["mission_name", "address", "work_time",
                          "demand_worker", "selected_worker",
-                         "accepted_volunteers", "date"]
+                         "accepted_volunteers", "date","name", "phone", "line_id"]
                     ]
                 )
+                display_df = display_df.rename(columns={
+                    "mission_name": "任務名稱",
+                    "address": "地點",
+                    "work_time": "工作時間",
+                    "demand_worker": "需求人數",
+                    "selected_worker": "目前人數",
+                    "date": "發布日期",
+                    "name": "受災戶姓名",      # 對應 name
+                    "phone": "受災戶電話",     # 對應 phone
+                    "line_id": "受災戶 LineID" # 對應 line_id
+                })
+
+                st.dataframe(display_df)
 
 # =================================================================
 #  🟦🟦🟦             以下為原本的「註冊模式」             🟦🟦🟦
