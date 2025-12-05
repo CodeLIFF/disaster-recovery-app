@@ -103,23 +103,24 @@ if mode == "登入":
             if my_tasks.empty:
                 st.info("目前沒有您發布的任務。")
             else:
-                st.dataframe(
-                    my_tasks[
-                        ["mission_name", "address", "work_time",
-                         "demand_worker", "selected_worker",
-                         "accepted_volunteers", "date","name", "phone", "line_id"]
-                    ]
-                )
+                display_df = my_tasks[
+                    ["mission_name", "address", "work_time",
+                     "demand_worker", "selected_worker",
+                     "accepted_volunteers", "date", 
+                     "name", "phone", "line_id"]
+                ]
+                
                 display_df = display_df.rename(columns={
                     "mission_name": "任務名稱",
                     "address": "地點",
                     "work_time": "工作時間",
                     "demand_worker": "需求人數",
                     "selected_worker": "目前人數",
+                    "accepted_volunteers": "已媒合志工",
                     "date": "發布日期",
-                    "name": "受災戶姓名",      # 對應 name
-                    "phone": "受災戶電話",     # 對應 phone
-                    "line_id": "受災戶 LineID" # 對應 line_id
+                    "name": "受災戶姓名",
+                    "phone": "受災戶電話",
+                    "line_id": "受災戶 LineID"
                 })
 
                 st.dataframe(display_df)
@@ -140,13 +141,15 @@ if mode == "登入":
             if joined_tasks.empty:
                 st.info("目前您沒有參與的任務。")
             else:
-                st.dataframe(
-                    joined_tasks[
-                        ["mission_name", "address", "work_time",
-                         "demand_worker", "selected_worker",
-                         "accepted_volunteers", "date","name", "phone", "line_id"]
-                    ]
-                )
+                # 1. 修正點：先將篩選結果指派給變數 display_df
+                display_df = joined_tasks[
+                    ["mission_name", "address", "work_time",
+                     "demand_worker", "selected_worker",
+                     "date", 
+                     "name", "phone", "line_id"] # 在這裡加入受災戶聯絡資訊
+                ]
+
+                # 2. 修正點：現在 display_df 已經存在，可以進行 rename
                 display_df = display_df.rename(columns={
                     "mission_name": "任務名稱",
                     "address": "地點",
@@ -154,11 +157,12 @@ if mode == "登入":
                     "demand_worker": "需求人數",
                     "selected_worker": "目前人數",
                     "date": "發布日期",
-                    "name": "受災戶姓名",      # 對應 name
-                    "phone": "受災戶電話",     # 對應 phone
-                    "line_id": "受災戶 LineID" # 對應 line_id
+                    "name": "受災戶姓名",
+                    "phone": "受災戶電話",
+                    "line_id": "受災戶 LineID"
                 })
 
+                # 3. 最後顯示結果
                 st.dataframe(display_df)
 
 # =================================================================
