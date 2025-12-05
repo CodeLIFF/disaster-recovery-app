@@ -207,7 +207,7 @@ st.markdown("---")
 st.subheader("②  地址驗證 address verification")
 
 address_input = st.text_input(
-    "🏠 通訊 / 受災地址（address，必填）",
+    "通訊 / 受災地址（address，必填）",
     value=st.session_state.get("address_value", ""),
     placeholder=f"請填寫完整地址，例如：{ALLOWED_REGION}○○鄉○○村○○路○號",
     help=f"目前僅限災區：{ALLOWED_REGION}，地址需包含此縣市名稱。",
@@ -281,7 +281,7 @@ prev_note = str(prev.get("note", "") or "")
 st.subheader("③  填寫／更新今日的受災需求")
 
 # 任務名稱：可留白，預設用昨天的任務名稱（或用地址）
-st.markdown("#### 📋 任務名稱 task name（可留白）")
+st.markdown("####  任務名稱 task name（可留白）")
 
 mission_name = st.text_input(
     "任務名稱 task name",        # 這個 label 不會顯示出來，因為我們把它 collapse 掉了
@@ -292,7 +292,7 @@ mission_name = st.text_input(
 )
 
 # 工作時間：多選（預設為上一筆設定）
-st.markdown("#### ⏰ 需要協助的時段 available time（必填，可複選）")
+st.markdown("####  需要協助的時段 available time（必填，可複選）")
 time_options = {
     " 早上 (08:00–11:00)": "morning",
     " 中午 (11:00–13:00)": "noon",
@@ -310,7 +310,7 @@ selected_time_labels = st.multiselect(
 selected_time_codes = [time_options[label] for label in selected_time_labels]
 
 # 人力需求：標題 + 數字輸入
-st.markdown("#### 👥 總人數需求 required number of people（必填，上限 20人）")
+st.markdown("####  總人數需求 required number of people（必填，上限 20人）")
 
 demand_worker = st.number_input(
     "總人數需求 required number of people",
@@ -322,7 +322,7 @@ demand_worker = st.number_input(
 )
 
 # ====== 地點照片：顯示舊照片 + 上傳新照片 ======
-st.markdown("#### 📸 地點當前照片 photo（必填）")
+st.markdown("####  地點當前照片 photo（必填）")
 
 if prev_photo:
     st.caption("目前記錄中的照片：")
@@ -375,7 +375,7 @@ tr_walk = st.checkbox(" 步行 on foot", value=("walk" in tr_tokens_set))
 tr_car = st.checkbox(" 開車 car", value=("car" in tr_tokens_set))
 tr_scooter = st.checkbox(" 機車 scooter", value=("scooter" in tr_tokens_set))
 tr_bike = st.checkbox(" 腳踏車 bike", value=("bike" in tr_tokens_set))
-tr_other = st.checkbox("➕ 其他 other transportation", value=bool(tr_other_text_default))
+tr_other = st.checkbox(" 其他 other transportation", value=bool(tr_other_text_default))
 
 tr_other_text = st.text_input(
     "請說明其他交通方式",
@@ -384,7 +384,7 @@ tr_other_text = st.text_input(
 )
 
 # 備註：預設上一筆
-note = st.text_area("💬 備註 / 想說的話 notes（可選填）", value=prev_note)
+note = st.text_area(" 備註 / 想說的話 notes（可選填）", value=prev_note)
 
 # ---------- 把 checkbox 狀態組回字串 ----------
 def build_resources_string():
