@@ -131,7 +131,7 @@ if mode == "登入":
                     joined_tasks[
                         ["mission_name", "address", "work_time",
                          "demand_worker", "selected_worker",
-                         "accepted_volunteers", "date", "date"]
+                         "accepted_volunteers", "date"]
                     ]
                 )
 
