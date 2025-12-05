@@ -292,7 +292,7 @@ mission_name = st.text_input(
 )
 
 # 工作時間：多選（預設為上一筆設定）
-st.markdown("#### ⏰ 需要協助的時間 available time（必填，可複選）")
+st.markdown("#### ⏰ 需要協助的時段 available time（必填，可複選）")
 time_options = {
     " 早上 (08:00–11:00)": "morning",
     " 中午 (11:00–13:00)": "noon",
@@ -454,7 +454,7 @@ if st.button("✅ 送出今日受災需求 submit"):
         st.stop()
 
     if not selected_time_codes:
-        st.error("❌ 請至少選擇一個需要協助的時間時段。Choose at least one available time.")
+        st.error("❌ 請至少選擇一個『需要協助的時段』。Choose at least one available time.")
         st.stop()
 
     resources_list = build_resources_string()
