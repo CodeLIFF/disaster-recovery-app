@@ -169,12 +169,12 @@ st.write("請依步驟完成：先驗證身分 → 再驗證地址 → 通過後
 # ================== 第一步：驗證基本資料 ================== #
 st.subheader("①  身分驗證 identity verification")
 
-name = st.text_input(" 姓名 name（需與「基本資料表單」一致）", key="victim_name")
-phone = st.text_input(" 電話 phone number（需與「基本資料表單」一致）", key="victim_phone")
+name = st.text_input(" 姓名 name（需與註冊時相同）", key="victim_name")
+phone = st.text_input(" 電話 phone number（需與註冊時相同）", key="victim_phone")
 
 if st.button(" 驗證基本資料 verify"):
     if not name or not phone:
-        st.error("❌ 姓名與電話為必填，且需與「基本資料表單」一致")
+        st.error("❌ 姓名與電話為必填，且需與註冊時相同")
         st.session_state["victim_verified"] = False
         st.session_state["victim_row_number"] = None
         st.session_state["victim_prev_data"] = {}
@@ -182,7 +182,7 @@ if st.button(" 驗證基本資料 verify"):
         row_number, row_series = find_victim_row(name, phone)
         if row_number is None:
             st.error("❌ 找不到您的基本資料。")
-            st.info("請先在「基本資料表單」選擇『受災戶 victim』並填寫，或確認姓名、電話是否輸入正確。")
+            st.info("請先在「登入和註冊頁」選擇「受災戶 victim」並填寫，或確認姓名、電話是否輸入正確。")
             st.session_state["victim_verified"] = False
             st.session_state["victim_row_number"] = None
             st.session_state["victim_prev_data"] = {}
