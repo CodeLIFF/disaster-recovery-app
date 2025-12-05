@@ -791,6 +791,13 @@ for idx, row in filtered_missions.iterrows():
         
         if addr:
             st.markdown(f"地址： {addr}")
+         # 新增：顯示日期
+        task_date = str(row.get("date", "")).strip()
+        if task_date:
+            st.markdown(f"🕒 日期： {task_date}")
+    
+        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
+        st.markdown(time_html, unsafe_allow_html=True)
         
         time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
