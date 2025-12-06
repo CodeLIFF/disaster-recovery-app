@@ -815,9 +815,6 @@ for idx, row in filtered_missions.iterrows():
         time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
         st.markdown(time_html, unsafe_allow_html=True)
         
-        time_html = f'<span style="font-weight:600;margin-right:20px"> 工作時間：</span>{render_labels(row["work_time"], time_display, "#FFF8EC")}'
-        st.markdown(time_html, unsafe_allow_html=True)
-
         st.markdown(f" 人數： {current_count} / {row['demand_worker']}")
         
         resources_html = f'<span style="font-weight:600;margin-right:25px"> 提供資源：</span>{render_labels(row["resources"], resources_display, "#FFE3B3")}'
